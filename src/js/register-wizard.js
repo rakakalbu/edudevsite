@@ -1,4 +1,3 @@
-// src/js/register-wizard.js
 (() => {
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -128,11 +127,21 @@
     const j=await api(`/api/register-options?type=intakes&campusId=${encodeURIComponent(campusId)}`); const recs=j.records||[];
     sel.innerHTML='<option value="">Pilih tahun ajaran</option>'; recs.forEach(x=> sel.innerHTML += `<option value="${x.Id}">${x.Name}</option>`);
   }
+
+  // ✅ UPDATED: tolerate {Id,Name} OR {StudyProgramId,StudyProgramName}
   async function loadPrograms(campusId,intakeId){
-    const sel=$('#programSelect'); sel.innerHTML='<option value="">Memuat…</option>';
-    const j=await api(`/api/register-options?type=programs&campusId=${encodeURIComponent(campusId)}&intakeId=${encodeURIComponent(intakeId)}`); const recs=j.records||[];
-    sel.innerHTML='<option value="">Pilih program</option>'; recs.forEach(x=> sel.innerHTML+=`<option value="${x.StudyProgramId}">${x.StudyProgramName}</option>`);
+    const sel=$('#programSelect');
+    sel.innerHTML='<option value="">Memuat…</option>';
+    const j=await api(`/api/register-options?type=programs&campusId=${encodeURIComponent(campusId)}&intakeId=${encodeURIComponent(intakeId)}`);
+    const recs=j.records||[];
+    sel.innerHTML='<option value="">Pilih program</option>';
+    recs.forEach(x=>{
+      const id   = x.Id || x.StudyProgramId;
+      const name = x.Name || x.StudyProgramName;
+      if (id && name) sel.innerHTML += `<option value="${id}">${name}</option>`;
+    });
   }
+
   async function resolveBSP(intakeId,studyProgramId){
     const today=new Date().toISOString().slice(0,10);
     const mb=await api(`/api/register-options?type=masterBatch&intakeId=${encodeURIComponent(intakeId)}&date=${today}`); if(!mb||!mb.id) throw new Error('Batch untuk intake ini belum tersedia.');
