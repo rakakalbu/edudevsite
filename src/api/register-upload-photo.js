@@ -3,7 +3,7 @@ const MAX_SIZE = 1024 * 1024;
 const ALLOWED = ['image/png', 'image/jpeg'];
 
 function extFromMime(m) { return m === 'image/png' ? 'png' : 'jpg'; }
-function safeTitle(prefix, id) { return ${prefix}-${id}-${new Date().toISOString().slice(0, 10)}; }
+function safeTitle(prefix, id) { return `${prefix}-${id}-${new Date().toISOString().slice(0, 10)}`; }
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -49,13 +49,18 @@ module.exports = async (req, res) => {
     const ext = (filename.split('.').pop() || extFromMime(mime)).toLowerCase();
     const cv = await conn.sobject('ContentVersion').create({
       Title: title,
-      PathOnClient: ${title}.${ext},
+      PathOnClient: `${title}.${ext}`,
       VersionData: base64,
       FirstPublishLocationId: oppId
     });
     if (!cv.success) throw new Error(cv.errors?.join(', ') || 'Gagal upload pas foto');
 
-    const q = await conn.query(SELECT ContentDocumentId FROM ContentVersion WHERE Id='${cv.id}' LIMIT 1);
+    const q = await conn.query(`
+      SELECT ContentDocumentId
+      FROM ContentVersion
+      WHERE Id='${cv.id}'
+      LIMIT 1
+    `);
     const docId = q.records?.[0]?.ContentDocumentId;
 
     if (docId) {
@@ -102,6 +107,6 @@ module.exports = async (req, res) => {
     res.status(200).json({ success: true, contentVersionId: cv.id });
   } catch (err) {
     console.error('register-upload-photo ERR:', err);
-    res.status(500).json({ success: false, message: err.message || 'Upload pas foto gagal' });
-  }
+    res.status(500).json({ success: false, message: err.message || 'Upload pas foto gagal' });
+  }
 };
