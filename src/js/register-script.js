@@ -108,7 +108,7 @@ function getSelectedText(selectEl) {
   return i > -1 ? selectEl.options[i].textContent : '';
 }
 
-// ========= STEP 3: Campus → (optional Intake) → Program (by Campus) =========
+// ========= STEP 3: Campus → Intake → Program =========
 let campusLoaded = false;
 
 async function loadCampuses() {
@@ -140,7 +140,9 @@ async function loadCampuses() {
       $('#campusName').value = checked.closest('label').querySelector('.radio-title').textContent;
 
       await loadIntakes(checked.value);
-      await loadPrograms(checked.value);
+      // after intakes are loaded, pick current intake (if any) and load programs with it
+      const currentIntake = $('#intakeSelect').value || '';
+      await loadPrograms(checked.value, currentIntake);
     }
 
     container.addEventListener('change', async (e) => {
@@ -155,7 +157,8 @@ async function loadCampuses() {
         $('#studyProgramSelect').disabled = true;
 
         await loadIntakes(campusId);
-        await loadPrograms(campusId);
+        const currentIntake = $('#intakeSelect').value || '';
+        await loadPrograms(campusId, currentIntake);
       }
     });
 
@@ -181,22 +184,27 @@ async function loadIntakes(campusId) {
   }
 }
 
-// by campus only
-async function loadPrograms(campusId) {
+// now depends on campusId + intakeId
+async function loadPrograms(campusId, intakeId) {
   const sel = $('#studyProgramSelect');
   if (!campusId) {
     setSelectOptions(sel, [], '— Pilih Campus dahulu —');
     sel.disabled = true;
     return;
   }
+  if (!intakeId) {
+    setSelectOptions(sel, [], '— Pilih Tahun Ajaran dahulu —');
+    sel.disabled = true;
+    return;
+  }
   try {
     sel.disabled = true;
-    const q = new URLSearchParams({ type:'program', campusId }).toString();
-    const r = await fetch(`/api/salesforce-query?${q}`);
+    const params = new URLSearchParams({ type:'program', campusId, intakeId, date: new Date().toISOString().slice(0,10) }).toString();
+    const r = await fetch(`/api/salesforce-query?${params}`);
     const j = await r.json();
     const items = j.records || [];
     if (!items.length) {
-      setSelectOptions(sel, [], '— Program belum tersedia untuk Campus ini —');
+      setSelectOptions(sel, [], '— Program belum tersedia untuk kombinasi Campus/Intake ini —');
       sel.disabled = true;
     } else {
       setSelectOptions(sel, items, '— Pilih Study Program —');
@@ -226,8 +234,12 @@ document.addEventListener('DOMContentLoaded', () => {
   populateGradYear();
 });
 
-// Intake tidak mempengaruhi program lagi
-$('#intakeSelect')?.addEventListener('change', () => { /* nothing */ });
+// when intake changes, reload programs with current campus
+$('#intakeSelect')?.addEventListener('change', async () => {
+  const campusId = $('#campusId').value || '';
+  const intakeId = $('#intakeSelect').value || '';
+  await loadPrograms(campusId, intakeId);
+});
 
 $('#prevBtn3')?.addEventListener('click', () => goToStep(2));
 $('#nextBtn3')?.addEventListener('click', () => {
@@ -237,6 +249,7 @@ $('#nextBtn3')?.addEventListener('click', () => {
 });
 
 // ========= STEP 4: Sekolah + Pas Foto =========
+// (unchanged below)
 const toggleSchoolManual = $('#schoolManualToggle');
 const otherSchoolBox = $('#otherSchoolContainer');
 toggleSchoolManual?.addEventListener('change', e => { otherSchoolBox.style.display = e.target.checked ? 'block' : 'none'; });
