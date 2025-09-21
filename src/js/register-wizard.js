@@ -50,6 +50,10 @@
   };
 
   // === UI helpers
+  function showWizardHeader(show){
+    $('#wizardHeader').style.display = show ? '' : 'none';
+    $('#progressSteps').style.display = show ? '' : 'none';
+  }
   function updateProgress(currentStep) {
     $$('#progressSteps .step-item').forEach(li => {
       const step = Number(li.dataset.step);
@@ -58,50 +62,114 @@
       if (step === currentStep) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
     });
   }
-  function setStep(n){ $$('.form-step').forEach(s => s.style.display = (s.dataset.step===String(n))?'':'none'); updateProgress(n); window.scrollTo({top:0,behavior:'smooth'}); }
+  function setStep(n){
+    $$('.form-step').forEach(s => s.style.display = (s.dataset.step===String(n))?'':'none');
+    updateProgress(n);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
   const toastOk = (t) => Swal.fire({ icon:'success', title:'Berhasil', text:t, timer:1600, showConfirmButton:false });
   const showLoading = (t='Memproses…') => Swal.fire({ title:t, didOpen:()=>Swal.showLoading(), allowOutsideClick:false, showConfirmButton:false });
   const closeLoading = () => Swal.close();
   const showError = (m) => Swal.fire({ icon:'error', title:'Gagal', text:m||'Terjadi kesalahan' });
 
-  async function pollStatus(email, phone) {
-    for (let i=0;i<10;i++){
-      try { const j = await api(`/api/register-status?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`); if (j.opportunityId) return j; }
-      catch {}
-      await new Promise(r=>setTimeout(r,1000));
-    }
-    return null;
+  // ========= VA (Step 2 auto-fill) =========
+  const VA_INFO = { bank: 'BCA', number: '8888800123456789', name: 'Metro Seven Admission' };
+  document.addEventListener('DOMContentLoaded', () => {
+    $('#vaBank')   && ($('#vaBank').textContent   = VA_INFO.bank);
+    $('#vaNumber') && ($('#vaNumber').textContent = VA_INFO.number);
+  });
+
+  // =========================
+  // AUTH GATE (LOGIN FIRST)
+  // =========================
+  function openWizardFromAuth(startStep=1){
+    $('#authGate').style.display = 'none';
+    showWizardHeader(true);
+    setStep(startStep);
   }
 
-  // === STEP 1
+  $('#btnShowRegister')?.addEventListener('click', () => {
+    openWizardFromAuth(1); // go to Step 1 (new user)
+  });
+
+  $('#formLogin')?.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const email = $('#loginEmail').value.trim().toLowerCase();
+    const password = $('#loginPassword').value;
+    const msg = $('#msgLogin'); msg.style.display='none';
+    if(!emailOk(email) || !password){ msg.textContent='Masukkan email dan kata sandi yang valid.'; msg.style.display='block'; return; }
+
+    try{
+      showLoading('Memverifikasi akun…');
+      // Server: verify email + password (hash), create NEW Opportunity for this account, return oppId+accId
+      const j = await api('/api/auth-login', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email, password })
+      });
+      S.acc = j.accountId;
+      S.opp = j.opportunityId;
+      S.pemohon = { email, firstName: j.firstName || '', lastName: j.lastName || '', phone: j.phone || '' };
+      $('#opptyIdLabel').textContent = S.opp;
+      $('#accountIdLabel').textContent = S.acc;
+      closeLoading();
+      toastOk('Masuk berhasil. Lanjut ke pembayaran.');
+      openWizardFromAuth(2); // skip Step 1 straight to Step 2
+    }catch(err){
+      closeLoading(); showError(err.message);
+    }
+  });
+
+  // =========================
+  // STEP 1 (REGISTER NEW)
+  // =========================
   $('#formStep1').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const firstName=$('#firstName').value.trim();
     const lastName=$('#lastName').value.trim();
-    const email=$('#email').value.trim();
+    const email=$('#email').value.trim().toLowerCase();
     const phone=normalizePhone($('#phone').value);
+    const pass=$('#password').value;
+    const pass2=$('#password2').value;
     const msg=$('#msgStep1'); msg.style.display='none';
-    if(!firstName || !lastName || !emailOk(email) || !phone){ msg.textContent='Lengkapi data dengan benar.'; msg.style.display='block'; return; }
+
+    if(!firstName || !lastName || !emailOk(email) || !phone){
+      msg.textContent='Lengkapi data dengan benar.'; msg.style.display='block'; return;
+    }
+    if(!pass || pass.length<6){ msg.textContent='Kata sandi minimal 6 karakter.'; msg.style.display='block'; return; }
+    if(pass!==pass2){ msg.textContent='Ulangi kata sandi tidak cocok.'; msg.style.display='block'; return; }
 
     try{
-      showLoading('Menyiapkan data Anda…');
-      const j = await api('/api/register-lead-convert',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({firstName,lastName,email,phone})});
-      let oppId=j.opportunityId, accId=j.accountId;
-      if(!oppId){ const ps=await pollStatus(email,phone); if(!ps) throw new Error('Konversi memerlukan waktu lebih lama. Coba lagi.'); oppId=ps.opportunityId; accId=ps.accountId; }
-      S.opp=oppId; S.acc=accId; S.pemohon={firstName,lastName,email,phone};
-      $('#opptyIdLabel').textContent=oppId; $('#accountIdLabel').textContent=accId;
-      closeLoading(); toastOk('Data pemohon disimpan.'); setStep(2);
-    }catch(err){ closeLoading(); showError(err.message); }
+      showWizardHeader(true);
+      showLoading('Mendaftarkan akun…');
+
+      // Server: enforce email uniqueness, create Person Account (hash password), create Opportunity
+      const j = await api('/api/auth-register',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ firstName,lastName,email,phone,password:pass })
+      });
+
+      S.opp=j.opportunityId; S.acc=j.accountId; S.pemohon={firstName,lastName,email,phone};
+      $('#opptyIdLabel').textContent=j.opportunityId; $('#accountIdLabel').textContent=j.accountId;
+
+      closeLoading(); toastOk('Akun dibuat. Lanjut ke pembayaran.');
+      setStep(2);
+    }catch(err){
+      closeLoading(); showError(err.message);
+    }
   });
 
-  // === STEP 2
+  // =========================
+  // STEP 2
+  // =========================
   $('#btnBack2').addEventListener('click', ()=> setStep(1));
   $('#formStep2').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const oppId=S.opp, accId=S.acc;
     const file=$('#proofFile').files[0];
     const msg=$('#msgStep2'); msg.style.display='none';
-    if(!oppId){ showError('Opportunity belum tersedia. Kembali ke langkah 1.'); return; }
+    if(!oppId){ showError('Opportunity belum tersedia.'); return; }
     if(!file){ msg.textContent='Pilih file bukti pembayaran.'; msg.style.display='block'; return; }
     if(file.size>1024*1024){ msg.textContent='Maksimal 1MB.'; msg.style.display='block'; return; }
     const allowed=['application/pdf','image/png','image/jpeg']; if(file.type && !allowed.includes(file.type)){ msg.textContent='Format harus PDF/PNG/JPG.'; msg.style.display='block'; return; }
@@ -114,7 +182,9 @@
     }catch(err){ closeLoading(); showError(err.message); }
   });
 
-  // === STEP 3
+  // =========================
+  // STEP 3 (unchanged except helpers)
+  // =========================
   async function loadCampuses(){
     const wrap=$('#campusRadios'); wrap.innerHTML='<div class="note">Memuat…</div>';
     try{
@@ -127,8 +197,6 @@
     const j=await api(`/api/register-options?type=intakes&campusId=${encodeURIComponent(campusId)}`); const recs=j.records||[];
     sel.innerHTML='<option value="">Pilih tahun ajaran</option>'; recs.forEach(x=> sel.innerHTML += `<option value="${x.Id}">${x.Name}</option>`);
   }
-
-  // ✅ UPDATED: tolerate {Id,Name} OR {StudyProgramId,StudyProgramName}
   async function loadPrograms(campusId,intakeId){
     const sel=$('#programSelect');
     sel.innerHTML='<option value="">Memuat…</option>';
@@ -141,7 +209,6 @@
       if (id && name) sel.innerHTML += `<option value="${id}">${name}</option>`;
     });
   }
-
   async function resolveBSP(intakeId,studyProgramId){
     const today=new Date().toISOString().slice(0,10);
     const mb=await api(`/api/register-options?type=masterBatch&intakeId=${encodeURIComponent(intakeId)}&date=${today}`); if(!mb||!mb.id) throw new Error('Batch untuk intake ini belum tersedia.');
@@ -169,11 +236,12 @@
     }catch(err){ closeLoading(); showError(err.message); }
   });
 
-  // === STEP 4
+  // =========================
+  // STEP 4
+  // =========================
   function populateYears(){ const sel=$('#gradYearSelect'); const now=new Date().getFullYear(); sel.innerHTML='<option value="">Pilih tahun</option>'; for(let y=now+5;y>=now-30;y--) sel.innerHTML+=`<option value="${y}">${y}</option>`; }
   $('#btnBack4').addEventListener('click', ()=> setStep(3));
 
-  // autocomplete + toggle manual
   function initStep4(){
     const cbNotFound = $('#schoolNotFound');
     const autoWrap   = $('#schoolAutoWrap');
@@ -184,36 +252,22 @@
     const mName      = $('#schoolManualName');
     const mNpsn      = $('#schoolManualNpsn');
 
-    // toggle
     const applyToggle = () => {
       const manual = cbNotFound.checked;
       manualWrap.style.display = manual ? '' : 'none';
       autoWrap.querySelector('.suggest-box').style.display = manual ? 'none' : '';
-      if (manual) {
-        // clear auto values
-        hidId.value = '';
-        input.value = '';
-        suggest.style.display = 'none';
-      } else {
-        // clear manual values
-        mName.value = '';
-        mNpsn.value = '';
-      }
+      if (manual) { hidId.value=''; input.value=''; suggest.style.display='none'; }
+      else { mName.value=''; mNpsn.value=''; }
     };
     cbNotFound?.addEventListener('change', applyToggle);
     applyToggle();
 
-    // autocomplete
-    async function fetchSekolah(term){
-      const r = await fetch(`/api/salesforce-query?type=sekolah&term=${encodeURIComponent(term)}`);
-      return r.json();
-    }
     const onType = debounce(async () => {
       const term = (input.value || '').trim();
       hidId.value = '';
       if (term.length < 2){ suggest.innerHTML=''; suggest.style.display='none'; return; }
       try{
-        const j = await fetchSekolah(term);
+        const j = await api(`/api/register-options?type=sekolah&term=${encodeURIComponent(term)}`);
         const items = j.records || [];
         if (!items.length){ suggest.innerHTML=''; suggest.style.display='none'; return; }
         suggest.innerHTML = items.map(it => {
@@ -227,24 +281,15 @@
     }, 300);
     input?.addEventListener('input', onType);
     input?.addEventListener('focus', onType);
-    document.addEventListener('click', (e)=>{
-      if (!suggest.contains(e.target) && e.target !== input) suggest.style.display='none';
-    });
-    suggest?.addEventListener('click', (e)=>{
-      const li = e.target.closest('.suggest-item'); if(!li) return;
-      input.value = li.dataset.name || '';
-      hidId.value = li.dataset.id || '';
-      suggest.style.display='none';
-    });
+    document.addEventListener('click', (e)=>{ if (!suggest.contains(e.target) && e.target !== input) suggest.style.display='none'; });
+    suggest?.addEventListener('click', (e)=>{ const li = e.target.closest('.suggest-item'); if(!li) return; input.value = li.dataset.name || ''; hidId.value = li.dataset.id || ''; suggest.style.display='none'; });
 
-    // submit
     $('#formStep4').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const oppId=S.opp, accId=S.acc;
       const gradYear=$('#gradYearSelect').value;
       const photo=$('#photoFile').files[0];
       const manual = cbNotFound.checked;
-
       const msg=$('#msgStep4'); msg.style.display='none';
 
       if(!gradYear){ msg.textContent='Pilih tahun lulus.'; msg.style.display='block'; return; }
@@ -252,8 +297,6 @@
       if(photo.size>1024*1024){ msg.textContent='Ukuran pas foto maksimal 1MB.'; msg.style.display='block'; return; }
 
       let payload = { opportunityId:oppId, accountId:accId, graduationYear:gradYear };
-      let reviewSchoolText = '';
-
       if (manual) {
         const name = (mName.value||'').trim();
         const npsn = digits(mNpsn.value||'');
@@ -261,8 +304,7 @@
         if(!npsn){ msg.textContent='Isi NPSN manual (hanya angka).'; msg.style.display='block'; return; }
         payload.draftSchool = name;
         payload.draftNpsn  = npsn;
-        payload.schoolName = name; // untuk review
-        reviewSchoolText = `${name} (NPSN ${npsn}) — Manual`;
+        payload.schoolName = name;
       } else {
         const schoolId = (hidId.value||'').trim();
         const schoolName = (input.value||'').trim();
@@ -270,7 +312,6 @@
         if(!idOk){ msg.textContent='Pilih sekolah dari daftar autocomplete.'; msg.style.display='block'; return; }
         payload.masterSchoolId = schoolId;
         payload.schoolName = schoolName;
-        reviewSchoolText = schoolName || '(dipilih)';
       }
 
       try{
@@ -278,13 +319,17 @@
         await api('/api/register-save-education',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
         const payload2={ opportunityId:oppId, accountId:accId, filename:photo.name, mime:photo.type||'image/jpeg', data:await fileToBase64(photo) };
         await api('/api/register-upload-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload2) });
-        S.sekolah={ mode: manual?'manual':'auto', schoolName: payload.schoolName, draftNpsn: payload.draftNpsn||null, gradYear, photoName:photo.name };
+        const sMode = manual?'manual':'auto';
+        const schoolName = payload.schoolName;
+        S.sekolah={ mode: sMode, schoolName, draftNpsn: payload.draftNpsn||null, gradYear, photoName:photo.name };
         closeLoading(); toastOk('Data sekolah & pas foto tersimpan.'); buildReview(); setStep(5);
       }catch(err){ closeLoading(); showError(err.message); }
     });
   }
 
-  // === STEP 5
+  // =========================
+  // STEP 5 (Finalize)
+  // =========================
   $('#btnBack5').addEventListener('click', ()=> setStep(4));
   function buildReview(){
     const p=S.pemohon, r=S.reg, s=S.sekolah;
@@ -292,21 +337,25 @@
       ? `${s.schoolName} (NPSN ${s.draftNpsn}) — Manual`
       : `${s.schoolName}`;
     $('#reviewBox').innerHTML = `
-      <div class="review-section"><h4>Data Pemohon</h4><div><b>Nama:</b> ${p.firstName} ${p.lastName}</div><div><b>Email:</b> ${p.email}</div><div><b>Phone:</b> ${p.phone}</div></div>
-      <div class="review-section"><h4>Preferensi Studi</h4><div><b>BSP:</b> ${r.bspName||'-'}</div></div>
+      <div class="review-section"><h4>Data Pemohon</h4><div><b>Nama:</b> ${p.firstName||'-'} ${p.lastName||''}</div><div><b>Email:</b> ${p.email||'-'}</div><div><b>Phone:</b> ${p.phone||'-'}</div></div>
+      <div class="review-section"><h4>Preferensi Studi</h4><div><b>BSP:</b> ${r?.bspName||'-'}</div></div>
       <div class="review-section"><h4>Data Sekolah</h4><div><b>Sekolah Asal:</b> ${sekolahLine}</div><div><b>Tahun Lulus:</b> ${s.gradYear}</div><div><b>Pas Foto:</b> ${s.photoName}</div></div>
-      <div class="hint">Saat Submit: Stage Opportunity → <b>Registration</b> & credentials ditampilkan sekali.</div>`;
+      <div class="hint">Saat Submit: Stage Opportunity → <b>Registration</b>.</div>`;
   }
   $('#btnSubmitFinal').addEventListener('click', async ()=>{
     try{
       showLoading('Menyelesaikan registrasi…');
-      const j = await api('/api/register-finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ opportunityId:S.opp, accountId:S.acc })});
+      await api('/api/register-finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ opportunityId:S.opp, accountId:S.acc })});
       closeLoading();
-      Swal.fire({ icon:'success', title:'Registrasi Berhasil', html:`<div style="text-align:left"><p><b>SIMPAN CREDENTIALS INI</b> (ditampilkan sekali):</p><p>Username: <code>${j.username}</code></p><p>Password: <code>${j.passwordPlain}</code></p></div>`, confirmButtonText:'Selesai' })
+      Swal.fire({ icon:'success', title:'Registrasi Berhasil', text:'Terima kasih. Registrasi Anda telah selesai.', confirmButtonText:'Selesai' })
         .then(()=> location.href='thankyou.html');
     }catch(err){ closeLoading(); showError(err.message); }
   });
 
-  // init
-  document.addEventListener('DOMContentLoaded', ()=>{ /* Step 1–2 init already handled */ });
+  // init: show only Auth Gate first
+  document.addEventListener('DOMContentLoaded', ()=>{
+    showWizardHeader(false);
+    $('#authGate').style.display = '';
+    $$('.form-step').forEach(s => s.style.display='none');
+  });
 })();

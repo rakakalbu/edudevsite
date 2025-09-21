@@ -9,24 +9,58 @@
   <link rel="stylesheet" href="css/register-style.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    /* Sedikit styling untuk suggestion */
     .suggest-box{position:relative}
     .suggest-list{position:absolute;z-index:20;left:0;right:0;max-height:220px;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin-top:4px}
     .suggest-item{padding:10px 12px;cursor:pointer}
     .suggest-item:hover{background:#f3f4f6}
     .muted{color:#6b7280;font-size:12px;margin-left:6px}
     .inline-checkbox{display:flex;align-items:center;gap:8px;margin-top:6px}
+    /* Simple auth card */
+    .auth-card{max-width:560px;margin:24px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+    .auth-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
+    .auth-sep{margin:20px 0;border-top:1px dashed #e5e7eb}
   </style>
 </head>
 <body>
   <main class="form-container">
+
     <a href="index.html" class="btn-back">← Kembali ke Beranda</a>
-    <div class="form-logo"><img src="assets/images/Logo-MetroSeven.png" alt="Metro Seven University" /></div>
-    <div class="form-header">
+    <div class="form-logo">
+      <img src="assets/images/Logo-MetroSeven.png" alt="Metro Seven University" />
+    </div>
+
+    <!-- ===================== AUTH GATE (NEW) ===================== -->
+    <section id="authGate" class="auth-card">
+      <h2 style="margin:0 0 8px">Masuk untuk Melanjutkan</h2>
+      <p style="margin:0 0 16px">Jika sudah pernah registrasi, masuk dengan email & kata sandi Anda. Jika belum, klik <b>Daftar Sekarang</b>.</p>
+
+      <form id="formLogin">
+        <div class="form-group">
+          <label>Email</label>
+          <input id="loginEmail" type="email" class="form-control" placeholder="nama@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Kata Sandi</label>
+          <input id="loginPassword" type="password" class="form-control" placeholder="Masukkan kata sandi" required>
+        </div>
+        <div id="msgLogin" class="field-error" style="display:none"></div>
+        <div class="auth-actions">
+          <button type="button" id="btnShowRegister" class="btn">Daftar Sekarang</button>
+          <button type="submit" class="submit-btn">Masuk</button>
+        </div>
+      </form>
+
+      <div class="auth-sep"></div>
+
+      <p class="note">Tips: Jika Anda lupa kata sandi, hubungi admin untuk reset.</p>
+    </section>
+
+    <!-- ===================== WIZARD HEADER ===================== -->
+    <div class="form-header" id="wizardHeader" style="display:none">
       <h2>Form Registrasi</h2><p>Lengkapi kelima langkah di bawah ini.</p>
     </div>
 
-    <ul class="progress-steps" id="progressSteps">
+    <ul class="progress-steps" id="progressSteps" style="display:none">
       <li class="step-item is-active" data-step="1"><span class="step-index">1</span><span class="step-label">Data Pemohon</span></li>
       <li class="step-item" data-step="2"><span class="step-index">2</span><span class="step-label">Bukti Pembayaran</span></li>
       <li class="step-item" data-step="3"><span class="step-index">3</span><span class="step-label">Preferensi Studi</span></li>
@@ -34,25 +68,36 @@
       <li class="step-item" data-step="5"><span class="step-index">5</span><span class="step-label">Review & Submit</span></li>
     </ul>
 
-    <!-- STEP 1 -->
-    <section id="step1" class="form-step" data-step="1">
+    <!-- ===================== STEP 1 (add password) ===================== -->
+    <section id="step1" class="form-step" data-step="1" style="display:none">
       <form id="formStep1">
         <div class="form-grid">
           <div class="form-group"><label>Nama Depan *</label><input id="firstName" class="form-control" required></div>
           <div class="form-group"><label>Nama Belakang *</label><input id="lastName" class="form-control" required></div>
           <div class="form-group"><label>Email *</label><input id="email" type="email" class="form-control" required></div>
+          <div class="form-group"><label>No. HP *</label><div class="input-group"><span class="prefix">+62</span><input id="phone" class="form-control" placeholder="81234xxxx" required></div></div>
+        </div>
+
+        <!-- NEW password field (user chooses password) -->
+        <div class="form-grid">
           <div class="form-group">
-            <label>No. HP *</label><div class="input-group"><span class="prefix">+62</span><input id="phone" class="form-control" placeholder="81234xxxx" required></div>
+            <label>Kata Sandi *</label>
+            <input id="password" type="password" class="form-control" placeholder="Minimal 6 karakter" required>
+          </div>
+          <div class="form-group">
+            <label>Ulangi Kata Sandi *</label>
+            <input id="password2" type="password" class="form-control" placeholder="Ulangi kata sandi" required>
           </div>
         </div>
-        <div class="note">Sistem: cek Lead (email & phone). Ada → set <code>Is_Convert__c=true</code>. Tidak ada → buat Person Account + Opportunity (RT University, Stage Booking Form).</div>
+
+        <div class="note">Sistem: cek email unik pada Account. Jika sudah ada, minta gunakan email lain.</div>
         <div id="msgStep1" class="field-error" style="display:none"></div>
         <div class="actions"><button type="submit" class="submit-btn">Lanjut</button></div>
         <div class="debug-info">Opportunity: <span id="opptyIdLabel">-</span> • Account: <span id="accountIdLabel">-</span></div>
       </form>
     </section>
 
-    <!-- STEP 2 -->
+    <!-- ===================== STEP 2 ===================== -->
     <section id="step2" class="form-step" data-step="2" style="display:none">
       <form id="formStep2">
         <div class="va-card">
@@ -72,7 +117,7 @@
       </form>
     </section>
 
-    <!-- STEP 3 -->
+    <!-- ===================== STEP 3 ===================== -->
     <section id="step3" class="form-step" data-step="3" style="display:none">
       <form id="formStep3">
         <div class="form-group full-width"><label>Campus *</label><div id="campusRadios" class="radio-list"><div class="note">Memuat...</div></div></div>
@@ -85,10 +130,9 @@
       </form>
     </section>
 
-    <!-- STEP 4 -->
+    <!-- ===================== STEP 4 ===================== -->
     <section id="step4" class="form-step" data-step="4" style="display:none">
       <form id="formStep4">
-        <!-- Autocomplete mode -->
         <div id="schoolAutoWrap" class="form-group full-width">
           <label>Sekolah Asal *</label>
           <div class="suggest-box">
@@ -102,7 +146,6 @@
           </div>
         </div>
 
-        <!-- Manual mode -->
         <div id="schoolManualWrap" class="form-grid" style="display:none">
           <div class="form-group">
             <label>Nama Sekolah (manual) *</label>
@@ -124,7 +167,7 @@
       </form>
     </section>
 
-    <!-- STEP 5 -->
+    <!-- ===================== STEP 5 ===================== -->
     <section id="step5" class="form-step" data-step="5" style="display:none">
       <div class="summary-card" id="reviewBox"></div>
       <div class="actions"><button id="btnBack5" type="button" class="btn">Kembali</button><button id="btnSubmitFinal" type="button" class="submit-btn">Submit</button></div>
