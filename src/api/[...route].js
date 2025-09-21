@@ -1,68 +1,78 @@
 // src/api/[...route].js
-// Single serverless entry that dispatches to your handlers in lib/handlers
+const path = require('path');
+const fs = require('fs');
 
-import authLogin from '../../lib/handlers/auth-login.js';
-import authRegister from '../../lib/handlers/auth-register.js';
-import ping from '../../lib/handlers/ping.js';
-import registerFinalize from '../../lib/handlers/register-finalize.js';
-import registerLeadConvert from '../../lib/handlers/register-lead-convert.js';
-import registerOptions from '../../lib/handlers/register-options.js';
-import registerSaveEducation from '../../lib/handlers/register-save-education.js';
-import registerStatus from '../../lib/handlers/register-status.js';
-import registerUploadPhoto from '../../lib/handlers/register-upload-photo.js';
-import registerUploadProof from '../../lib/handlers/register-upload-proof.js';
-import register from '../../lib/handlers/register.js';
-import salesforceQuery from '../../lib/handlers/salesforce-query.js';
-import webtolead from '../../lib/handlers/webtolead.js';
+function json(res, code, obj) {
+  res.statusCode = code;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(obj));
+}
 
-const routes = {
-  // auth
-  'auth-login': authLogin,
-  'auth-register': authRegister,
+function notFound(res, message = 'Unknown API route') {
+  return json(res, 404, { success: false, message });
+}
 
-  // register flows
-  'register': register,
-  'register-finalize': registerFinalize,
-  'register-lead-convert': registerLeadConvert,
-  'register-options': registerOptions,
-  'register-save-education': registerSaveEducation,
-  'register-status': registerStatus,
-  'register-upload-photo': registerUploadPhoto,
-  'register-upload-proof': registerUploadProof,
+function allowCORS(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with');
+}
 
-  // misc
-  'salesforce-query': salesforceQuery,
-  'webtolead': webtolead,
-  'ping': ping,
-};
-
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   try {
-    // 1) First try the standard catch-all param from Vercel
-    let segs = req.query?.route;
-
-    // 2) Fallback: parse from req.url in case (some hosts/tools) don't populate req.query.route
-    if (!segs || (Array.isArray(segs) && segs.length === 0)) {
-      // req.url is like: /api/register-lead-convert?x=1
-      const m = req.url.match(/\/api\/([^/?#]+)/i);
-      if (m) segs = [decodeURIComponent(m[1])];
+    allowCORS(res);
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 204;
+      return res.end();
     }
 
-    const routeKey = Array.isArray(segs) ? segs[0] : segs;
+    // Compute route name from URL after "/api/"
+    // Example: /api/register-lead-convert?x=1  -> "register-lead-convert"
+    const url = new URL(req.url, 'http://localhost');
+    let slug = url.pathname.replace(/^\/+/, ''); // e.g. "api/register-lead-convert"
+    if (!slug.toLowerCase().startsWith('api/')) {
+      return notFound(res);
+    }
+    const name = slug.slice(4); // remove "api/"
 
-    // Helpful debug header so you can see what the router observed
-    res.setHeader('x-router-route', String(routeKey ?? 'null'));
-    res.setHeader('x-router-url', req.url || '');
+    if (!name) return notFound(res);
 
-    const fn = routes[routeKey];
-    if (!fn) {
-      res.status(404).json({ success: false, message: `Unknown API route: ${String(routeKey)}` });
-      return;
+    const handlerPath = path.join(process.cwd(), 'lib', 'handlers', `${name}.js`);
+    if (!fs.existsSync(handlerPath)) {
+      // Optional: allow ping in src/api if you keep it
+      if (name === 'ping') {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        return json(res, 200, {
+          ok: true,
+          env_ready: Boolean(process.env.SF_LOGIN_URL && process.env.SF_USERNAME && process.env.SF_PASSWORD),
+          now: new Date().toISOString(),
+          route: 'ping (src/api)'
+        });
+      }
+      return notFound(res, `Unknown API route: ${name}`);
     }
 
-    return await fn(req, res);
+    // Load the handler (CommonJS)
+    // Each file in lib/handlers/* exports: module.exports = async (req, res) => { ... }
+    const handler = require(handlerPath);
+    if (typeof handler !== 'function') {
+      return json(res, 500, { success: false, message: `Handler ${name} is not a function` });
+    }
+
+    // Run the handler; it should send its own JSON response.
+    // Wrap to ensure a JSON error if it throws.
+    let finished = false;
+    const originalEnd = res.end;
+    res.end = function () { finished = true; return originalEnd.apply(this, arguments); };
+
+    await handler(req, res);
+
+    if (!finished) {
+      // If a handler forgot to end the response, end with a generic OK.
+      return json(res, 200, { success: true });
+    }
   } catch (err) {
     console.error('Router error:', err);
-    res.status(500).json({ success: false, message: err?.message || 'Router failed' });
+    return json(res, 500, { success: false, message: err.message || 'Internal error' });
   }
-}
+};
