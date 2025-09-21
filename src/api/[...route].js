@@ -1,78 +1,55 @@
 // src/api/[...route].js
-const path = require('path');
-const fs = require('fs');
+// Central router that forwards /api/<name> to lib/handlers/<name>.js
 
-function json(res, code, obj) {
+function sendJSON(res, code, obj) {
   res.statusCode = code;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(obj));
 }
 
-function notFound(res, message = 'Unknown API route') {
-  return json(res, 404, { success: false, message });
-}
+let handlers;
+function getHandlers() {
+  if (!handlers) {
+    handlers = {
+      // --- auth ---
+      'auth-login': require('../../lib/handlers/auth-login.js'),
+      'auth-register': require('../../lib/handlers/auth-register.js'),
 
-function allowCORS(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with');
+      // --- register flow ---
+      'register-lead-convert': require('../../lib/handlers/register-lead-convert.js'),
+      'register-options': require('../../lib/handlers/register-options.js'),
+      'register-save-education': require('../../lib/handlers/register-save-education.js'),
+      'register-upload-proof': require('../../lib/handlers/register-upload-proof.js'),
+      'register-upload-photo': require('../../lib/handlers/register-upload-photo.js'),
+      'register-finalize': require('../../lib/handlers/register-finalize.js'),
+      'register-status': require('../../lib/handlers/register-status.js'),
+      'register': require('../../lib/handlers/register.js'),
+
+      // --- misc you still use ---
+      'salesforce-query': require('../../lib/handlers/salesforce-query.js'),
+      'webtolead': require('../../lib/handlers/webtolead.js'),
+    };
+  }
+  return handlers;
 }
 
 module.exports = async (req, res) => {
   try {
-    allowCORS(res);
-    if (req.method === 'OPTIONS') {
-      res.statusCode = 204;
-      return res.end();
+    const url = new URL(req.url, `https://${req.headers.host}`);
+    // e.g. /api/register-lead-convert -> "register-lead-convert"
+    const name = url.pathname.replace(/^\/api\//, '').replace(/\/+$/, '');
+
+    const map = getHandlers();
+    const handler = map[name];
+
+    if (!name || !handler) {
+      return sendJSON(res, 404, { success: false, message: `Unknown API route: ${name || ''}` });
     }
 
-    // Compute route name from URL after "/api/"
-    // Example: /api/register-lead-convert?x=1  -> "register-lead-convert"
-    const url = new URL(req.url, 'http://localhost');
-    let slug = url.pathname.replace(/^\/+/, ''); // e.g. "api/register-lead-convert"
-    if (!slug.toLowerCase().startsWith('api/')) {
-      return notFound(res);
-    }
-    const name = slug.slice(4); // remove "api/"
-
-    if (!name) return notFound(res);
-
-    const handlerPath = path.join(process.cwd(), 'lib', 'handlers', `${name}.js`);
-    if (!fs.existsSync(handlerPath)) {
-      // Optional: allow ping in src/api if you keep it
-      if (name === 'ping') {
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        return json(res, 200, {
-          ok: true,
-          env_ready: Boolean(process.env.SF_LOGIN_URL && process.env.SF_USERNAME && process.env.SF_PASSWORD),
-          now: new Date().toISOString(),
-          route: 'ping (src/api)'
-        });
-      }
-      return notFound(res, `Unknown API route: ${name}`);
-    }
-
-    // Load the handler (CommonJS)
-    // Each file in lib/handlers/* exports: module.exports = async (req, res) => { ... }
-    const handler = require(handlerPath);
-    if (typeof handler !== 'function') {
-      return json(res, 500, { success: false, message: `Handler ${name} is not a function` });
-    }
-
-    // Run the handler; it should send its own JSON response.
-    // Wrap to ensure a JSON error if it throws.
-    let finished = false;
-    const originalEnd = res.end;
-    res.end = function () { finished = true; return originalEnd.apply(this, arguments); };
-
-    await handler(req, res);
-
-    if (!finished) {
-      // If a handler forgot to end the response, end with a generic OK.
-      return json(res, 200, { success: true });
-    }
+    // Delegate to the selected handler (each handler is a (req,res)=>{} CommonJS module)
+    return handler(req, res);
   } catch (err) {
-    console.error('Router error:', err);
-    return json(res, 500, { success: false, message: err.message || 'Internal error' });
+    console.error('API router error:', err);
+    return sendJSON(res, 500, { success: false, message: err.message || 'Router error' });
   }
 };
