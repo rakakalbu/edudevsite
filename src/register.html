@@ -15,10 +15,15 @@
     .suggest-item:hover{background:#f3f4f6}
     .muted{color:#6b7280;font-size:12px;margin-left:6px}
     .inline-checkbox{display:flex;align-items:center;gap:8px;margin-top:6px}
-    /* Simple auth card */
     .auth-card{max-width:560px;margin:24px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
     .auth-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
     .auth-sep{margin:20px 0;border-top:1px dashed #e5e7eb}
+    .va-card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px}
+    .va-title{font-weight:600;margin-bottom:8px}
+    .va-row{display:flex;justify-content:space-between;padding:6px 0;border-top:1px dashed #eee}
+    .va-row:first-of-type{border-top:none}
+    .value.code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .price{font-weight:700;font-size:18px}
   </style>
 </head>
 <body>
@@ -29,7 +34,7 @@
       <img src="assets/images/Logo-MetroSeven.png" alt="Metro Seven University" />
     </div>
 
-    <!-- ===================== AUTH GATE (NEW) ===================== -->
+    <!-- ===================== AUTH GATE ===================== -->
     <section id="authGate" class="auth-card">
       <h2 style="margin:0 0 8px">Masuk untuk Melanjutkan</h2>
       <p style="margin:0 0 16px">Jika sudah pernah registrasi, masuk dengan email & kata sandi Anda. Jika belum, klik <b>Daftar Sekarang</b>.</p>
@@ -60,15 +65,16 @@
       <h2>Form Registrasi</h2><p>Lengkapi kelima langkah di bawah ini.</p>
     </div>
 
+    <!-- NOTE: Step order changed (2 = Preferensi, 3 = Pembayaran) -->
     <ul class="progress-steps" id="progressSteps" style="display:none">
       <li class="step-item is-active" data-step="1"><span class="step-index">1</span><span class="step-label">Data Pemohon</span></li>
-      <li class="step-item" data-step="2"><span class="step-index">2</span><span class="step-label">Bukti Pembayaran</span></li>
-      <li class="step-item" data-step="3"><span class="step-index">3</span><span class="step-label">Preferensi Studi</span></li>
+      <li class="step-item" data-step="2"><span class="step-index">2</span><span class="step-label">Preferensi Studi</span></li>
+      <li class="step-item" data-step="3"><span class="step-index">3</span><span class="step-label">Pembayaran</span></li>
       <li class="step-item" data-step="4"><span class="step-index">4</span><span class="step-label">Sekolah & Pas Foto</span></li>
       <li class="step-item" data-step="5"><span class="step-index">5</span><span class="step-label">Review & Submit</span></li>
     </ul>
 
-    <!-- ===================== STEP 1 (add password) ===================== -->
+    <!-- ===================== STEP 1 ===================== -->
     <section id="step1" class="form-step" data-step="1" style="display:none">
       <form id="formStep1">
         <div class="form-grid">
@@ -78,7 +84,6 @@
           <div class="form-group"><label>No. HP *</label><div class="input-group"><span class="prefix">+62</span><input id="phone" class="form-control" placeholder="81234xxxx" required></div></div>
         </div>
 
-        <!-- NEW password field (user chooses password) -->
         <div class="form-grid">
           <div class="form-group">
             <label>Kata Sandi *</label>
@@ -97,36 +102,37 @@
       </form>
     </section>
 
-    <!-- ===================== STEP 2 ===================== -->
+    <!-- ===================== STEP 2 (Preferensi – moved up) ===================== -->
     <section id="step2" class="form-step" data-step="2" style="display:none">
-      <form id="formStep2">
-        <div class="va-card">
-          <div class="va-title">Virtual Account Pembayaran</div>
-          <div class="va-row"><div class="label">Bank</div><div id="vaBank" class="value">BCA</div></div>
-          <div class="va-row"><div class="label">VA Number</div><div id="vaNumber" class="value code">8888800123456789</div></div>
-        </div>
-        <div class="form-group full-width">
-          <label>Upload Bukti (PDF/PNG/JPG ≤ 1MB) *</label>
-          <input id="proofFile" type="file" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
-          <div id="msgStep2" class="field-error" style="display:none"></div>
-        </div>
-        <div class="actions">
-          <button id="btnBack2" type="button" class="btn">Kembali</button>
-          <button type="submit" class="submit-btn">Upload & Lanjut</button>
-        </div>
-      </form>
-    </section>
-
-    <!-- ===================== STEP 3 ===================== -->
-    <section id="step3" class="form-step" data-step="3" style="display:none">
-      <form id="formStep3">
+      <form id="formStep2_Prefs">
         <div class="form-group full-width"><label>Campus *</label><div id="campusRadios" class="radio-list"><div class="note">Memuat...</div></div></div>
         <div class="form-grid">
           <div class="form-group"><label>Tahun Ajaran *</label><select id="intakeSelect" class="form-control"><option value="">Pilih tahun ajaran</option></select></div>
           <div class="form-group"><label>Study Program *</label><select id="programSelect" class="form-control"><option value="">Pilih program</option></select></div>
         </div>
-        <div id="msgStep3" class="field-error" style="display:none"></div>
-        <div class="actions"><button id="btnBack3" type="button" class="btn">Kembali</button><button type="submit" class="submit-btn">Simpan & Lanjut</button></div>
+        <div id="msgStep2" class="field-error" style="display:none"></div>
+        <div class="actions"><button id="btnBack2" type="button" class="btn">Kembali</button><button type="submit" class="submit-btn">Simpan & Lanjut ke Pembayaran</button></div>
+      </form>
+    </section>
+
+    <!-- ===================== STEP 3 (Pembayaran – moved down, shows price) ===================== -->
+    <section id="step3" class="form-step" data-step="3" style="display:none">
+      <form id="formStep3_Payment">
+        <div class="va-card">
+          <div class="va-title">Virtual Account Pembayaran</div>
+          <div class="va-row"><div class="label">Bank</div><div id="vaBank" class="value">BCA</div></div>
+          <div class="va-row"><div class="label">VA Number</div><div id="vaNumber" class="value code">8888800123456789</div></div>
+          <div class="va-row"><div class="label">Harga Form</div><div id="vaPrice" class="value price">Rp -</div></div>
+        </div>
+        <div class="form-group full-width">
+          <label>Upload Bukti (PDF/PNG/JPG ≤ 1MB) *</label>
+          <input id="proofFile" type="file" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+          <div id="msgStep3" class="field-error" style="display:none"></div>
+        </div>
+        <div class="actions">
+          <button id="btnBack3" type="button" class="btn">Kembali</button>
+          <button type="submit" class="submit-btn">Upload & Lanjut</button>
+        </div>
       </form>
     </section>
 
