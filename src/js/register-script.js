@@ -1,3 +1,5 @@
+// public/register-script.js
+
 // ========= Helpers =========
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
@@ -357,8 +359,16 @@ $('#submitBtn')?.addEventListener('click', async (e)=>{
       graduationYear : $('#gradYear').value || null,
       schoolId       : ($('#schoolId')?.value && isSfId($('#schoolId').value)) ? $('#schoolId').value : null,
 
-      paymentProof: window.paymentProofDataURL ? { dataUrl: window.paymentProofDataURL, fileName: window.paymentProofFileName || 'bukti-pembayaran' } : null,
-      photo       : window.photoDataURL ? { dataUrl: window.photoFileName || 'pas-foto-3x4.jpg', fileName: window.photoFileName || 'pas-foto-3x4.jpg' } : null,
+      paymentProof: window.paymentProofDataURL ? {
+        dataUrl: window.paymentProofDataURL,
+        fileName: window.paymentProofFileName || 'bukti-pembayaran'
+      } : null,
+
+      // FIXED: send the actual image dataUrl (was wrongly sending filename before)
+      photo: window.photoDataURL ? {
+        dataUrl: window.photoDataURL,
+        fileName: window.photoFileName || 'pas-foto-3x4.jpg'
+      } : null,
     };
 
     const r = await fetch('/api/register', {
