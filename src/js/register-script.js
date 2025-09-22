@@ -140,7 +140,6 @@ async function loadCampuses() {
       $('#campusName').value = checked.closest('label').querySelector('.radio-title').textContent;
 
       await loadIntakes(checked.value);
-      // after intakes are loaded, pick current intake (if any) and load programs with it
       const currentIntake = $('#intakeSelect').value || '';
       await loadPrograms(checked.value, currentIntake);
     }
@@ -184,18 +183,15 @@ async function loadIntakes(campusId) {
   }
 }
 
-// now depends on campusId + intakeId
 async function loadPrograms(campusId, intakeId) {
   const sel = $('#studyProgramSelect');
   if (!campusId) {
     setSelectOptions(sel, [], '— Pilih Campus dahulu —');
-    sel.disabled = true;
-    return;
+    sel.disabled = true; return;
   }
   if (!intakeId) {
     setSelectOptions(sel, [], '— Pilih Tahun Ajaran dahulu —');
-    sel.disabled = true;
-    return;
+    sel.disabled = true; return;
   }
   try {
     sel.disabled = true;
@@ -234,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
   populateGradYear();
 });
 
-// when intake changes, reload programs with current campus
 $('#intakeSelect')?.addEventListener('change', async () => {
   const campusId = $('#campusId').value || '';
   const intakeId = $('#intakeSelect').value || '';
@@ -249,7 +244,6 @@ $('#nextBtn3')?.addEventListener('click', () => {
 });
 
 // ========= STEP 4: Sekolah + Pas Foto =========
-// (unchanged below)
 const toggleSchoolManual = $('#schoolManualToggle');
 const otherSchoolBox = $('#otherSchoolContainer');
 toggleSchoolManual?.addEventListener('change', e => { otherSchoolBox.style.display = e.target.checked ? 'block' : 'none'; });
@@ -287,7 +281,7 @@ schoolSearch?.addEventListener('input', () => {
 
 $('#prevBtn4')?.addEventListener('click', () => goToStep(3));
 
-// Pas Foto (validasi di step ini)
+// Pas Foto
 const MAX_PHOTO = 1 * 1024 * 1024;
 const ALLOWED_PHOTO = ['image/jpeg','image/png'];
 let photoDataURL = null, photoFileName = null;
@@ -318,7 +312,6 @@ $('#nextBtn4')?.addEventListener('click', () => {
   }
   if (!photoDataURL) { photoErr.textContent = 'Unggah pas foto 3×4 terlebih dahulu.'; return; }
 
-  // Build ringkasan
   $('#sumName').textContent = `${$('#firstName').value} ${$('#lastName').value || ''}`.trim();
   $('#sumEmail').textContent = $('#email').value;
   $('#sumPhone').textContent = `+62${digits($('#phone').value)}`.replace('++','+');
@@ -361,14 +354,11 @@ $('#submitBtn')?.addEventListener('click', async (e)=>{
       intakeName     : getSelectedText($('#intakeSelect')) || null,
       studyProgramId : $('#studyProgramSelect').value || null,
       studyProgramName : getSelectedText($('#studyProgramSelect')) || null,
-
       graduationYear : $('#gradYear').value || null,
-
-      // hanya kirim kalau benar SF Id
-      schoolId       : $('#schoolId')?.value && isSfId($('#schoolId').value) ? $('#schoolId').value : null,
+      schoolId       : ($('#schoolId')?.value && isSfId($('#schoolId').value)) ? $('#schoolId').value : null,
 
       paymentProof: window.paymentProofDataURL ? { dataUrl: window.paymentProofDataURL, fileName: window.paymentProofFileName || 'bukti-pembayaran' } : null,
-      photo       : window.photoDataURL ? { dataUrl: window.photoDataURL, fileName: window.photoFileName || 'pas-foto-3x4.jpg' } : null,
+      photo       : window.photoDataURL ? { dataUrl: window.photoFileName || 'pas-foto-3x4.jpg', fileName: window.photoFileName || 'pas-foto-3x4.jpg' } : null,
     };
 
     const r = await fetch('/api/register', {
@@ -378,6 +368,14 @@ $('#submitBtn')?.addEventListener('click', async (e)=>{
     });
     const j = await r.json();
     if (!r.ok || !j.success) throw new Error(j.message || 'Gagal submit pendaftaran');
+
+    // Store the triple for the next page to "fill the opportunity"
+    sessionStorage.setItem('regTriple', JSON.stringify({
+      accountId: j.accountId || null,
+      contactId: j.contactId || null,
+      opportunityId: j.opportunityId || null,
+      source: j.source || null
+    }));
 
     location.href = 'thankyou.html';
   } catch (err) {
