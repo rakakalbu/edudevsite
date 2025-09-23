@@ -31,10 +31,7 @@
     for (let i=0;i<bytes.byteLength;i++) binary += String.fromCharCode(bytes[i]);
     return btoa(binary);
   }
-  const rupiah = (n) => {
-    if (n == null || isNaN(n)) return 'Rp -';
-    return 'Rp ' + Number(n).toLocaleString('id-ID');
-  };
+  const rupiah = (n) => (n == null || isNaN(n)) ? 'Rp -' : 'Rp ' + Number(n).toLocaleString('id-ID');
 
   // === Local state
   const K = (k) => `m7_reg_${k}`;
@@ -85,13 +82,13 @@
   async function updateStage(stageNum){
     try{
       if(!S.opp) return;
-      await api('/api/register-update-stage', {
+      // matches lib/handlers/salesforce-query.js in your tree
+      await api('/api/salesforce-query', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ opportunityId: S.opp, webStage: stageNum })
       });
     }catch(e){
-      // non-blocking
       console.warn('updateStage failed:', e?.message || e);
     }
   }
@@ -105,9 +102,7 @@
     setStep(startStep);
   }
 
-  $('#btnShowRegister')?.addEventListener('click', () => {
-    openWizardFromAuth(1);
-  });
+  $('#btnShowRegister')?.addEventListener('click', () => openWizardFromAuth(1));
 
   $('#formLogin')?.addEventListener('submit', async (e)=>{
     e.preventDefault();
@@ -131,7 +126,7 @@
       closeLoading();
       toastOk('Masuk berhasil. Lanjut pilih program.');
       openWizardFromAuth(2);
-      updateStage(2); // moved straight to Preferensi
+      updateStage(2);
       loadStep2Options();
     }catch(err){
       closeLoading(); showError(err.message);
@@ -172,7 +167,7 @@
 
       closeLoading(); toastOk('Akun dibuat. Pilih program.');
       setStep(2);
-      updateStage(2); // after Step1 -> Step2
+      updateStage(2);
       loadStep2Options();
     }catch(err){
       closeLoading(); showError(err.message);
@@ -182,35 +177,43 @@
   // =========================
   // STEP 2 (Preferensi)
   // =========================
+  const ROUTE = '/api/register-options';
+
   async function loadCampuses(){
     const wrap=$('#campusRadios'); wrap.innerHTML='<div class="note">Memuat…</div>';
     try{
-      // using your existing backend route
-      const j=await api('/api/salesforce-query?type=campus'); 
-      const recs=j.records||[]; 
+      const j=await api(`${ROUTE}?type=campus`);
+      const recs=j.records||[];
       if(!recs.length){ wrap.innerHTML='<div class="field-error">Data campus tidak tersedia.</div>'; return; }
-      wrap.innerHTML=''; 
-      recs.forEach((c,i)=>{ 
-        const id=`camp_${c.Id}`; 
-        const label=document.createElement('label'); 
-        label.className='radio-item'; 
-        label.htmlFor=id; 
-        label.innerHTML=`<input type="radio" id="${id}" name="campus" value="${c.Id}" ${i===0?'checked':''}><div><div class="radio-title">${c.Name}</div></div>`; 
-        wrap.appendChild(label); 
+      wrap.innerHTML='';
+      recs.forEach((c,i)=>{
+        const id=`camp_${c.Id}`;
+        const label=document.createElement('label');
+        label.className='radio-item';
+        label.htmlFor=id;
+        label.innerHTML=`
+          <input type="radio" id="${id}" name="campus" value="${c.Id}" ${i===0?'checked':''}>
+          <div><div class="radio-title">${c.Name}</div></div>`;
+        wrap.appendChild(label);
       });
-    }catch{ wrap.innerHTML='<div class="field-error">Gagal memuat campus.</div>'; }
+    }catch{
+      wrap.innerHTML='<div class="field-error">Gagal memuat campus.</div>';
+    }
   }
+
   async function loadIntakes(campusId){
     const sel=$('#intakeSelect'); sel.innerHTML='<option value="">Memuat…</option>';
-    const j=await api(`/api/salesforce-query?type=intake&campusId=${encodeURIComponent(campusId)}`); 
+    const j=await api(`${ROUTE}?type=intake&campusId=${encodeURIComponent(campusId)}`);
     const recs=j.records||[];
-    sel.innerHTML='<option value="">Pilih tahun ajaran</option>'; recs.forEach(x=> sel.innerHTML += `<option value="${x.Id}">${x.Name}</option>`);
+    sel.innerHTML='<option value="">Pilih tahun ajaran</option>';
+    recs.forEach(x=> sel.innerHTML += `<option value="${x.Id}">${x.Name}</option>`);
   }
+
   async function loadPrograms(campusId,intakeId){
     const sel=$('#programSelect');
     sel.innerHTML='<option value="">Memuat…</option>';
     const params = new URLSearchParams({ type:'program', campusId, intakeId, date: new Date().toISOString().slice(0,10) }).toString();
-    const j=await api(`/api/salesforce-query?${params}`);
+    const j=await api(`${ROUTE}?${params}`);
     const recs=j.records||[];
     sel.innerHTML='<option value="">Pilih program</option>';
     recs.forEach(x=>{
@@ -219,20 +222,34 @@
       if (id && name) sel.innerHTML += `<option value="${id}">${name}</option>`;
     });
   }
+
   async function resolvePricing(intakeId, studyProgramId){
-    // returns { bspId, bspName, bookingPrice }
     const today = new Date().toISOString().slice(0,10);
-    const q = await api(`/api/salesforce-query?type=pricing&intakeId=${encodeURIComponent(intakeId)}&studyProgramId=${encodeURIComponent(studyProgramId)}&date=${today}`);
+    const q = await api(`${ROUTE}?type=pricing&intakeId=${encodeURIComponent(intakeId)}&studyProgramId=${encodeURIComponent(studyProgramId)}&date=${today}`);
     if(!q || !q.bspId) throw new Error('Batch Study Program belum tersedia.');
     return { bspId: q.bspId, bspName: q.bspName, bookingPrice: q.bookingPrice ?? null };
   }
-  async function loadStep2Options(){ 
-    await loadCampuses(); 
-    const campusId=$('input[name="campus"]:checked')?.value; 
-    if(campusId) await loadIntakes(campusId); 
+
+  async function loadStep2Options(){
+    await loadCampuses();
+    const campusId=$('input[name="campus"]:checked')?.value;
+    if(campusId){
+      await loadIntakes(campusId);
+      const intakeId=$('#intakeSelect').value || '';
+      if (intakeId) await loadPrograms(campusId,intakeId);
+    }
   }
-  $('#campusRadios')?.addEventListener('change', async (e)=>{ if(e.target?.name==='campus') await loadIntakes(e.target.value); });
-  $('#intakeSelect')?.addEventListener('change', async ()=>{ const campusId=$('input[name="campus"]:checked')?.value||''; const intakeId=$('#intakeSelect').value||''; if(campusId&&intakeId) await loadPrograms(campusId,intakeId); });
+
+  $('#campusRadios')?.addEventListener('change', async (e)=>{
+    if(e.target?.name==='campus') await loadIntakes(e.target.value);
+  });
+
+  $('#intakeSelect')?.addEventListener('change', async ()=>{
+    const campusId=$('input[name="campus"]:checked')?.value||'';
+    const intakeId=$('#intakeSelect').value||'';
+    if(campusId&&intakeId) await loadPrograms(campusId,intakeId);
+  });
+
   $('#btnBack2').addEventListener('click', ()=> setStep(1));
 
   $('#formStep2_Prefs').addEventListener('submit', async (e)=>{
@@ -256,12 +273,12 @@
       $('#vaPrice') && ($('#vaPrice').textContent = rupiah(bookingPrice));
       closeLoading(); toastOk('Preferensi studi tersimpan. Lanjut ke pembayaran.');
       setStep(3);
-      updateStage(3); // after saving preferences → Payment
+      updateStage(3);
     }catch(err){ closeLoading(); showError(err.message); }
   });
 
   // =========================
-  // STEP 3 (Pembayaran) — price displayed from S.reg.bookingPrice
+  // STEP 3 (Pembayaran)
   // =========================
   $('#btnBack3').addEventListener('click', ()=> setStep(2));
   $('#formStep3_Payment').addEventListener('submit', async (e)=>{
@@ -280,7 +297,7 @@
       await api('/api/register-upload-proof',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
       closeLoading(); toastOk('Bukti pembayaran berhasil diupload.');
       setStep(4);
-      updateStage(4); // after payment → School & Photo
+      updateStage(4);
       populateYears(); initStep4();
     }catch(err){ closeLoading(); showError(err.message); }
   });
@@ -365,7 +382,8 @@
 
       try{
         showLoading('Menyimpan data sekolah & pas foto…');
-        await api('/api/register-save-education',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+        // matches lib/handlers/register-save-educ.js in your tree
+        await api('/api/register-save-educ',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
         const payload2={ opportunityId:oppId, accountId:accId, filename:photo.name, mime:photo.type||'image/jpeg', data:await fileToBase64(photo) };
         await api('/api/register-upload-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload2) });
         const sMode = manual?'manual':'auto';
@@ -373,7 +391,7 @@
         S.sekolah={ mode: sMode, schoolName, draftNpsn: payload.draftNpsn||null, gradYear, photoName:photo.name };
         closeLoading(); toastOk('Data sekolah & pas foto tersimpan.');
         setStep(5);
-        updateStage(5); // final stage reached
+        updateStage(5);
         buildReview();
       }catch(err){ closeLoading(); showError(err.message); }
     });
@@ -398,14 +416,13 @@
     try{
       showLoading('Menyelesaikan registrasi…');
       await api('/api/register-finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ opportunityId:S.opp, accountId:S.acc })});
-      // keep Web_Stage__c at 5 after submit per your requirement
       closeLoading();
       Swal.fire({ icon:'success', title:'Registrasi Berhasil', text:'Terima kasih. Registrasi Anda telah selesai.', confirmButtonText:'Selesai' })
         .then(()=> location.href='thankyou.html');
     }catch(err){ closeLoading(); showError(err.message); }
   });
 
-  // init: show only Auth Gate first
+  // init
   document.addEventListener('DOMContentLoaded', ()=>{
     showWizardHeader(false);
     $('#authGate').style.display = '';
