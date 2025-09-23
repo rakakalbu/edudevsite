@@ -1,8 +1,10 @@
 {
+  "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
     { "source": "/:opp([A-Za-z0-9]{15,18})", "destination": "/register.html" },
+    { "source": "/:opp([A-Za-z0-9]{15,18})/", "destination": "/register.html" },
     { "source": "/register", "destination": "/register.html" }
   ]
 }
