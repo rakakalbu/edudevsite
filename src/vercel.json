@@ -1,5 +1,4 @@
 {
-
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
@@ -8,5 +7,4 @@
     { "src": "^/register/?$", "dest": "/register.html" },
     { "src": "^/([A-Za-z0-9]{15,18})/?$", "dest": "/register.html" }
   ]
-  
 }
