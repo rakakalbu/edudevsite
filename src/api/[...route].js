@@ -18,14 +18,20 @@ function getHandlers() {
       // --- register flow ---
       'register-lead-convert': require('../../lib/handlers/register-lead-convert.js'),
       'register-options': require('../../lib/handlers/register-options.js'),
-      'register-save-education': require('../../lib/handlers/register-save-education.js'),
+
+      // ✅ correct route name (matches your file lib/handlers/register-save-educ.js)
+      'register-save-educ': require('../../lib/handlers/register-save-educ.js'),
+
+      // ✅ backward-compat alias (both routes hit the same handler)
+      'register-save-education': require('../../lib/handlers/register-save-educ.js'),
+
       'register-upload-proof': require('../../lib/handlers/register-upload-proof.js'),
       'register-upload-photo': require('../../lib/handlers/register-upload-photo.js'),
       'register-finalize': require('../../lib/handlers/register-finalize.js'),
       'register-status': require('../../lib/handlers/register-status.js'),
       'register': require('../../lib/handlers/register.js'),
 
-      // --- misc you still use ---
+      // --- misc still used ---
       'salesforce-query': require('../../lib/handlers/salesforce-query.js'),
       'webtolead': require('../../lib/handlers/webtolead.js'),
     };
@@ -35,8 +41,12 @@ function getHandlers() {
 
 module.exports = async (req, res) => {
   try {
-    const url = new URL(req.url, `https://${req.headers.host}`);
-    // e.g. /api/register-lead-convert -> "register-lead-convert"
+    // Build a URL safely even in dev servers without HTTPS
+    const proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0];
+    const base  = `${proto}://${req.headers.host || 'localhost'}`;
+    const url   = new URL(req.url, base);
+
+    // e.g. /api/register-save-educ/ -> "register-save-educ"
     const name = url.pathname.replace(/^\/api\//, '').replace(/\/+$/, '');
 
     const map = getHandlers();
@@ -46,7 +56,7 @@ module.exports = async (req, res) => {
       return sendJSON(res, 404, { success: false, message: `Unknown API route: ${name || ''}` });
     }
 
-    // Delegate to the selected handler (each handler is a (req,res)=>{} CommonJS module)
+    // Delegate to the selected handler (CommonJS (req,res)=>{} module)
     return handler(req, res);
   } catch (err) {
     console.error('API router error:', err);
