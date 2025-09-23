@@ -1,6 +1,6 @@
 // src/api/[...route].js
 // Central router that forwards /api/<name> to lib/handlers/<name>.js
-// Lazily loads only the requested handler and supports safe aliases.
+// Lazily loads only the requested handler. Resolves paths relative to this file.
 
 const path = require('path');
 const fs = require('fs');
@@ -11,8 +11,7 @@ function sendJSON(res, code, obj) {
   res.end(JSON.stringify(obj));
 }
 
-// Map of route -> filename (relative to lib/handlers).
-// Values are *filenames*, not required modules. We'll require lazily.
+// Map of route -> filename (inside lib/handlers)
 const ROUTE_MAP = {
   // --- auth ---
   'auth-login': 'auth-login.js',
@@ -22,9 +21,9 @@ const ROUTE_MAP = {
   'register-lead-convert': 'register-lead-convert.js',
   'register-options': 'register-options.js',
 
-  // Prefer the short name. We'll also alias the long name below.
+  // Preferred short name; long name kept as alias below
   'register-save-educ': 'register-save-educ.js',
-  'register-save-education': 'register-save-educ.js', // alias to the same file
+  'register-save-education': 'register-save-educ.js', // alias
 
   'register-upload-proof': 'register-upload-proof.js',
   'register-upload-photo': 'register-upload-photo.js',
@@ -32,38 +31,34 @@ const ROUTE_MAP = {
   'register-status': 'register-status.js',
   'register': 'register.js',
 
-  // --- misc still used ---
+  // --- misc ---
   'salesforce-query': 'salesforce-query.js',
   'webtolead': 'webtolead.js',
 };
 
-// Some deployments may only contain the longer filename.
-// Provide a secondary filename fallback per route if the primary isn't found.
+// Extra filename fallbacks for certain routes (in case only the long filename exists)
 const FALLBACK_FILENAMES = {
   'register-save-educ': 'register-save-education.js',
   'register-save-education': 'register-save-education.js',
 };
 
 function resolveHandlerPath(routeName) {
-  const baseDir = path.join(process.cwd(), 'lib', 'handlers');
+  // Resolve relative to this file, not process.cwd()
+  const baseDir = path.resolve(__dirname, '../../lib/handlers');
 
-  // Candidates in order of preference:
   const candidates = [];
 
-  // 1) Explicit mapping if present
+  // 1) Mapped filename
   if (ROUTE_MAP[routeName]) {
     candidates.push(path.join(baseDir, ROUTE_MAP[routeName]));
   }
-
-  // 2) Fallback filename for known aliases (e.g., education ⇄ educ)
+  // 2) Known fallback filename (e.g., education ⇄ educ)
   if (FALLBACK_FILENAMES[routeName]) {
     candidates.push(path.join(baseDir, FALLBACK_FILENAMES[routeName]));
   }
-
-  // 3) Generic guess: <routeName>.js (lets you add new files without updating this map)
+  // 3) Generic guess to allow new handlers without changing this file
   candidates.push(path.join(baseDir, `${routeName}.js`));
 
-  // Pick the first that exists
   for (const p of candidates) {
     if (fs.existsSync(p)) return p;
   }
@@ -77,9 +72,8 @@ module.exports = async (req, res) => {
     const host  = req.headers.host || 'localhost';
     const url   = new URL(req.url, `${proto}://${host}`);
 
-    // /api/foo/bar -> "foo/bar" (we only support top-level files, but keep this robust)
+    // /api/foo/ -> "foo"
     const name = url.pathname.replace(/^\/api\//, '').replace(/\/+$/, '');
-
     if (!name) {
       return sendJSON(res, 404, { success: false, message: 'No API route specified' });
     }
@@ -89,7 +83,7 @@ module.exports = async (req, res) => {
       return sendJSON(res, 404, { success: false, message: `Unknown API route: ${name}` });
     }
 
-    // Clear cache in dev to reflect file changes without restarts
+    // In dev, clear cache so edits are picked up
     if (process.env.NODE_ENV !== 'production') {
       delete require.cache[require.resolve(handlerPath)];
     }
