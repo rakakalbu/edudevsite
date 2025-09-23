@@ -82,7 +82,6 @@
   async function updateStage(stageNum){
     try{
       if(!S.opp) return;
-      // matches lib/handlers/salesforce-query.js in your tree
       await api('/api/salesforce-query', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -123,6 +122,10 @@
       S.pemohon = { email, firstName: j.firstName || '', lastName: j.lastName || '', phone: j.phone || '' };
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
+
+      // Make the URL shareable: /<OpportunityId>
+      if (S.opp && location.pathname !== `/${S.opp}`) history.replaceState(null, '', `/${S.opp}`);
+
       closeLoading();
       toastOk('Masuk berhasil. Lanjut pilih program.');
       openWizardFromAuth(2);
@@ -164,6 +167,9 @@
 
       S.opp=j.opportunityId; S.acc=j.accountId; S.pemohon={firstName,lastName,email,phone};
       $('#opptyIdLabel').textContent=j.opportunityId; $('#accountIdLabel').textContent=j.accountId;
+
+      // Make the URL shareable: /<OpportunityId>
+      if (S.opp && location.pathname !== `/${S.opp}`) history.replaceState(null, '', `/${S.opp}`);
 
       closeLoading(); toastOk('Akun dibuat. Pilih program.');
       setStep(2);
@@ -382,7 +388,6 @@
 
       try{
         showLoading('Menyimpan data sekolah & pas foto…');
-        // matches lib/handlers/register-save-educ.js in your tree
         await api('/api/register-save-educ',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
         const payload2={ opportunityId:oppId, accountId:accId, filename:photo.name, mime:photo.type||'image/jpeg', data:await fileToBase64(photo) };
         await api('/api/register-upload-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload2) });
@@ -422,10 +427,71 @@
     }catch(err){ closeLoading(); showError(err.message); }
   });
 
+  // =========================
+  // DEEP LINK: /<OpportunityId>
+  // =========================
+  function readOppIdFromPath() {
+    const path = (location.pathname || '').replace(/^\/+/, '').replace(/\/+$/, '');
+    if (/^[A-Za-z0-9]{15,18}$/.test(path)) return path;
+    return '';
+  }
+
+  async function tryResumeFromOpp() {
+    const oppId = readOppIdFromPath();
+    if (!oppId) return;
+
+    try {
+      showLoading('Memuat progress registrasi…');
+      const j = await api(`/api/register-status?opportunityId=${encodeURIComponent(oppId)}`);
+
+      // Save to local state
+      S.opp = j.opportunityId;
+      S.acc = j.accountId || '';
+      S.pemohon = {
+        firstName: j.person?.firstName || '',
+        lastName : j.person?.lastName  || '',
+        email    : j.person?.email     || '',
+        phone    : j.person?.phone     || ''
+      };
+      $('#opptyIdLabel').textContent = S.opp;
+      $('#accountIdLabel').textContent = S.acc;
+
+      // Show wizard at the right step (clamp 1..5)
+      const step = Math.max(1, Math.min(5, Number(j.webStage || 1)));
+      $('#authGate').style.display = 'none';
+      showWizardHeader(true);
+
+      // Preload some data for certain steps
+      if (step <= 2) {
+        await loadStep2Options();
+      }
+      if (step === 3) {
+        // price may show after user picks program; just show VA card
+      }
+      if (step >= 4) {
+        populateYears();
+        initStep4();
+      }
+      setStep(step);
+      closeLoading();
+    } catch (e) {
+      closeLoading();
+      // If cannot resume (bad link), fall back to auth gate
+      console.warn('Deep-link resume failed:', e?.message || e);
+    }
+  }
+
   // init
-  document.addEventListener('DOMContentLoaded', ()=>{
+  document.addEventListener('DOMContentLoaded', async ()=>{
     showWizardHeader(false);
-    $('#authGate').style.display = '';
     $$('.form-step').forEach(s => s.style.display='none');
+
+    // If the path looks like an Opportunity Id → resume
+    if (readOppIdFromPath()) {
+      await tryResumeFromOpp();
+    } else {
+      // default: show login/register gate
+      $('#authGate').style.display = '';
+    }
   });
 })();
