@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <base href="/" /> <!-- ensures CSS/JS/IMG resolve from site root -->
+  <base href="/" />
   <title>Registrasi — Wizard 5 Langkah</title>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/responsive.css">
@@ -35,7 +35,6 @@
       <img src="assets/images/Logo-MetroSeven.png" alt="Metro Seven University" />
     </div>
 
-    <!-- ===================== AUTH GATE ===================== -->
     <section id="authGate" class="auth-card">
       <h2 style="margin:0 0 8px">Masuk untuk Melanjutkan</h2>
       <p style="margin:0 0 16px">Jika sudah pernah registrasi, masuk dengan email & kata sandi Anda. Jika belum, klik <b>Daftar Sekarang</b>.</p>
@@ -61,12 +60,10 @@
       <p class="note">Tips: Jika Anda lupa kata sandi, hubungi admin untuk reset.</p>
     </section>
 
-    <!-- ===================== WIZARD HEADER ===================== -->
     <div class="form-header" id="wizardHeader" style="display:none">
       <h2>Form Registrasi</h2><p>Lengkapi kelima langkah di bawah ini.</p>
     </div>
 
-    <!-- NOTE: Step order changed (2 = Preferensi, 3 = Pembayaran) -->
     <ul class="progress-steps" id="progressSteps" style="display:none">
       <li class="step-item is-active" data-step="1"><span class="step-index">1</span><span class="step-label">Data Pemohon</span></li>
       <li class="step-item" data-step="2"><span class="step-index">2</span><span class="step-label">Preferensi Studi</span></li>
@@ -75,7 +72,6 @@
       <li class="step-item" data-step="5"><span class="step-index">5</span><span class="step-label">Review & Submit</span></li>
     </ul>
 
-    <!-- ===================== STEP 1 ===================== -->
     <section id="step1" class="form-step" data-step="1" style="display:none">
       <form id="formStep1">
         <div class="form-grid">
@@ -103,7 +99,6 @@
       </form>
     </section>
 
-    <!-- ===================== STEP 2 (Preferensi) ===================== -->
     <section id="step2" class="form-step" data-step="2" style="display:none">
       <form id="formStep2_Prefs">
         <div class="form-group full-width"><label>Campus *</label><div id="campusRadios" class="radio-list"><div class="note">Memuat...</div></div></div>
@@ -116,7 +111,6 @@
       </form>
     </section>
 
-    <!-- ===================== STEP 3 (Pembayaran) ===================== -->
     <section id="step3" class="form-step" data-step="3" style="display:none">
       <form id="formStep3_Payment">
         <div class="va-card">
