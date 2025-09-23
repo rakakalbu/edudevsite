@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <base href="/" /> <!-- ✅ makes css/js/img paths resolve from site root -->
+  <base href="/" /> <!-- ensures CSS/JS/IMG resolve from site root -->
   <title>Registrasi — Wizard 5 Langkah</title>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/responsive.css">
@@ -103,7 +103,7 @@
       </form>
     </section>
 
-    <!-- ===================== STEP 2 (Preferensi – moved up) ===================== -->
+    <!-- ===================== STEP 2 (Preferensi) ===================== -->
     <section id="step2" class="form-step" data-step="2" style="display:none">
       <form id="formStep2_Prefs">
         <div class="form-group full-width"><label>Campus *</label><div id="campusRadios" class="radio-list"><div class="note">Memuat...</div></div></div>
@@ -116,7 +116,7 @@
       </form>
     </section>
 
-    <!-- ===================== STEP 3 (Pembayaran – moved down, shows price) ===================== -->
+    <!-- ===================== STEP 3 (Pembayaran) ===================== -->
     <section id="step3" class="form-step" data-step="3" style="display:none">
       <form id="formStep3_Payment">
         <div class="va-card">
