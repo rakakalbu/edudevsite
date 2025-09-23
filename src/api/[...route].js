@@ -1,5 +1,9 @@
 // src/api/[...route].js
 // Central router that forwards /api/<name> to lib/handlers/<name>.js
+// Lazily loads only the requested handler and supports safe aliases.
+
+const path = require('path');
+const fs = require('fs');
 
 function sendJSON(res, code, obj) {
   res.statusCode = code;
@@ -7,56 +11,98 @@ function sendJSON(res, code, obj) {
   res.end(JSON.stringify(obj));
 }
 
-let handlers;
-function getHandlers() {
-  if (!handlers) {
-    handlers = {
-      // --- auth ---
-      'auth-login': require('../../lib/handlers/auth-login.js'),
-      'auth-register': require('../../lib/handlers/auth-register.js'),
+// Map of route -> filename (relative to lib/handlers).
+// Values are *filenames*, not required modules. We'll require lazily.
+const ROUTE_MAP = {
+  // --- auth ---
+  'auth-login': 'auth-login.js',
+  'auth-register': 'auth-register.js',
 
-      // --- register flow ---
-      'register-lead-convert': require('../../lib/handlers/register-lead-convert.js'),
-      'register-options': require('../../lib/handlers/register-options.js'),
+  // --- register flow ---
+  'register-lead-convert': 'register-lead-convert.js',
+  'register-options': 'register-options.js',
 
-      // ✅ correct route name (matches your file lib/handlers/register-save-educ.js)
-      'register-save-educ': require('../../lib/handlers/register-save-educ.js'),
+  // Prefer the short name. We'll also alias the long name below.
+  'register-save-educ': 'register-save-educ.js',
+  'register-save-education': 'register-save-educ.js', // alias to the same file
 
-      // ✅ backward-compat alias (both routes hit the same handler)
-      'register-save-education': require('../../lib/handlers/register-save-educ.js'),
+  'register-upload-proof': 'register-upload-proof.js',
+  'register-upload-photo': 'register-upload-photo.js',
+  'register-finalize': 'register-finalize.js',
+  'register-status': 'register-status.js',
+  'register': 'register.js',
 
-      'register-upload-proof': require('../../lib/handlers/register-upload-proof.js'),
-      'register-upload-photo': require('../../lib/handlers/register-upload-photo.js'),
-      'register-finalize': require('../../lib/handlers/register-finalize.js'),
-      'register-status': require('../../lib/handlers/register-status.js'),
-      'register': require('../../lib/handlers/register.js'),
+  // --- misc still used ---
+  'salesforce-query': 'salesforce-query.js',
+  'webtolead': 'webtolead.js',
+};
 
-      // --- misc still used ---
-      'salesforce-query': require('../../lib/handlers/salesforce-query.js'),
-      'webtolead': require('../../lib/handlers/webtolead.js'),
-    };
+// Some deployments may only contain the longer filename.
+// Provide a secondary filename fallback per route if the primary isn't found.
+const FALLBACK_FILENAMES = {
+  'register-save-educ': 'register-save-education.js',
+  'register-save-education': 'register-save-education.js',
+};
+
+function resolveHandlerPath(routeName) {
+  const baseDir = path.join(process.cwd(), 'lib', 'handlers');
+
+  // Candidates in order of preference:
+  const candidates = [];
+
+  // 1) Explicit mapping if present
+  if (ROUTE_MAP[routeName]) {
+    candidates.push(path.join(baseDir, ROUTE_MAP[routeName]));
   }
-  return handlers;
+
+  // 2) Fallback filename for known aliases (e.g., education ⇄ educ)
+  if (FALLBACK_FILENAMES[routeName]) {
+    candidates.push(path.join(baseDir, FALLBACK_FILENAMES[routeName]));
+  }
+
+  // 3) Generic guess: <routeName>.js (lets you add new files without updating this map)
+  candidates.push(path.join(baseDir, `${routeName}.js`));
+
+  // Pick the first that exists
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
 }
 
 module.exports = async (req, res) => {
   try {
-    // Build a URL safely even in dev servers without HTTPS
+    // Build URL safely behind proxies
     const proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0];
-    const base  = `${proto}://${req.headers.host || 'localhost'}`;
-    const url   = new URL(req.url, base);
+    const host  = req.headers.host || 'localhost';
+    const url   = new URL(req.url, `${proto}://${host}`);
 
-    // e.g. /api/register-save-educ/ -> "register-save-educ"
+    // /api/foo/bar -> "foo/bar" (we only support top-level files, but keep this robust)
     const name = url.pathname.replace(/^\/api\//, '').replace(/\/+$/, '');
 
-    const map = getHandlers();
-    const handler = map[name];
-
-    if (!name || !handler) {
-      return sendJSON(res, 404, { success: false, message: `Unknown API route: ${name || ''}` });
+    if (!name) {
+      return sendJSON(res, 404, { success: false, message: 'No API route specified' });
     }
 
-    // Delegate to the selected handler (CommonJS (req,res)=>{} module)
+    const handlerPath = resolveHandlerPath(name);
+    if (!handlerPath) {
+      return sendJSON(res, 404, { success: false, message: `Unknown API route: ${name}` });
+    }
+
+    // Clear cache in dev to reflect file changes without restarts
+    if (process.env.NODE_ENV !== 'production') {
+      delete require.cache[require.resolve(handlerPath)];
+    }
+
+    const mod = require(handlerPath);
+    const handler =
+      typeof mod === 'function' ? mod :
+      (mod && typeof mod.default === 'function' ? mod.default : null);
+
+    if (!handler) {
+      return sendJSON(res, 500, { success: false, message: `Handler is not a function for route: ${name}` });
+    }
+
     return handler(req, res);
   } catch (err) {
     console.error('API router error:', err);
