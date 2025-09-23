@@ -428,68 +428,84 @@
   });
 
   // =========================
-  // DEEP LINK: /<OpportunityId>
+  // DEEP LINK BOOT (supports ?opp=... OR /<OpportunityId>)
   // =========================
-  function readOppIdFromPath() {
+  function extractOppIdFromUrl() {
+    const params = new URLSearchParams(location.search || '');
+    const fromQS = (params.get('opp') || '').trim();
+
     const path = (location.pathname || '').replace(/^\/+/, '').replace(/\/+$/, '');
-    if (/^[A-Za-z0-9]{15,18}$/.test(path)) return path;
-    return '';
+    const fromPath = /^[A-Za-z0-9]{15,18}$/.test(path) ? path : '';
+
+    return fromQS || fromPath || '';
   }
 
-  async function tryResumeFromOpp() {
-    const oppId = readOppIdFromPath();
-    if (!oppId) return;
+  async function bootFromDeepLink() {
+    const oppId = extractOppIdFromUrl();
+    if (!oppId) return false;
 
     try {
-      showLoading('Memuat progress registrasi…');
+      showLoading('Menyiapkan formulir…');
+
+      // Fetch current web stage + basic person/account info
       const j = await api(`/api/register-status?opportunityId=${encodeURIComponent(oppId)}`);
 
-      // Save to local state
-      S.opp = j.opportunityId;
+      // Save local state so the rest of the wizard works as-is
+      S.opp = oppId;
       S.acc = j.accountId || '';
       S.pemohon = {
-        firstName: j.person?.firstName || '',
-        lastName : j.person?.lastName  || '',
-        email    : j.person?.email     || '',
-        phone    : j.person?.phone     || ''
+        firstName: j.person?.firstName || j.firstName || '',
+        lastName : j.person?.lastName  || j.lastName  || '',
+        email    : j.person?.email     || j.email     || '',
+        phone    : j.person?.phone     || j.phone     || ''
       };
+
+      // Canonicalize URL to /<OpportunityId> (nice shareable link)
+      if (location.pathname !== `/${oppId}`) {
+        history.replaceState(null, '', `/${oppId}`);
+      }
+
+      // Update debug labels
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
 
       // Show wizard at the right step (clamp 1..5)
-      const step = Math.max(1, Math.min(5, Number(j.webStage || 1)));
+      const stage = Math.min(5, Math.max(1, Number(j.webStage || 1)));
       $('#authGate').style.display = 'none';
       showWizardHeader(true);
 
-      // Preload some data for certain steps
-      if (step <= 2) {
+      // Preload dynamic data for the landing step
+      if (stage <= 2) {
         await loadStep2Options();
-      }
-      if (step === 3) {
-        // price may show after user picks program; just show VA card
-      }
-      if (step >= 4) {
+      } else if (stage === 3) {
+        // if backend exposes price, show it
+        if (j.bookingPrice != null) $('#vaPrice').textContent = rupiah(j.bookingPrice);
+      } else if (stage >= 4) {
         populateYears();
         initStep4();
       }
-      setStep(step);
+
+      setStep(stage);
       closeLoading();
+      return true;
     } catch (e) {
-      closeLoading();
-      // If cannot resume (bad link), fall back to auth gate
       console.warn('Deep-link resume failed:', e?.message || e);
+      closeLoading();
+      // Fall back to auth gate
+      return false;
     }
   }
 
+  // =========================
   // init
+  // =========================
   document.addEventListener('DOMContentLoaded', async ()=>{
     showWizardHeader(false);
     $$('.form-step').forEach(s => s.style.display='none');
 
-    // If the path looks like an Opportunity Id → resume
-    if (readOppIdFromPath()) {
-      await tryResumeFromOpp();
-    } else {
+    // Try deep-link resume first
+    const resumed = await bootFromDeepLink();
+    if (!resumed) {
       // default: show login/register gate
       $('#authGate').style.display = '';
     }
