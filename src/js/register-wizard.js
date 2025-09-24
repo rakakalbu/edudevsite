@@ -1,4 +1,5 @@
 /* public/js/register-wizard.js */
+
 (() => {
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -340,7 +341,27 @@
     cbNotFound?.addEventListener('change', applyToggle);
     applyToggle();
 
-    // … autocomplete code unchanged …
+    const onType = debounce(async () => {
+      const term = (input.value || '').trim();
+      hidId.value = '';
+      if (term.length < 2){ suggest.innerHTML=''; suggest.style.display='none'; return; }
+      try{
+        const j = await api(`/api/register-options?type=sekolah&term=${encodeURIComponent(term)}`);
+        const items = j.records || [];
+        if (!items.length){ suggest.innerHTML=''; suggest.style.display='none'; return; }
+        suggest.innerHTML = items.map(it => {
+          const npsn = it.NPSN__c ? `<span class="muted">• NPSN ${it.NPSN__c}</span>` : '';
+          return `<li class="suggest-item" data-id="${it.Id}" data-name="${(it.Name||'').replace(/"/g,'&quot;')}" data-npsn="${it.NPSN__c||''}">${it.Name} ${npsn}</li>`;
+        }).join('');
+        suggest.style.display='block';
+      }catch{
+        suggest.innerHTML=''; suggest.style.display='none';
+      }
+    }, 300);
+    input?.addEventListener('input', onType);
+    input?.addEventListener('focus', onType);
+    document.addEventListener('click', (e)=>{ if (!suggest.contains(e.target) && e.target !== input) suggest.style.display='none'; });
+    suggest?.addEventListener('click', (e)=>{ const li = e.target.closest('.suggest-item'); if(!li) return; input.value = li.dataset.name || ''; hidId.value = li.dataset.id || ''; suggest.style.display='none'; });
 
     $('#formStep4').addEventListener('submit', async (e)=>{
       e.preventDefault();
@@ -411,23 +432,39 @@
   $('#btnBack5').addEventListener('click', ()=> setStep(4));
   function buildReview(){
     const p=S.pemohon, r=S.reg, s=S.sekolah;
+
+    // NPSN suffix only when provided
+    const npsnSuffix = s?.draftNpsn ? ` (NPSN: ${s.draftNpsn})` : '';
     const sekolahLine = s.mode==='manual'
-      ? `${s.schoolName} (NPSN ${s.draftNpsn}) — Manual`
+      ? `${s.schoolName}${npsnSuffix} — Manual`
       : `${s.schoolName}`;
+
     $('#reviewBox').innerHTML = `
-      <div class="review-section"><h4>Data Pemohon</h4><div><b>Nama:</b> ${p.firstName||'-'} ${p.lastName||''}</div><div><b>Email:</b> ${p.email||'-'}</div><div><b>Phone:</b> ${p.phone||'-'}</div></div>
-      <div class="review-section"><h4>Preferensi Studi</h4><div><b>BSP:</b> ${r?.bspName||'-'}</div><div><b>Harga Form:</b> ${r?.bookingPrice!=null?('Rp '+Number(r.bookingPrice).toLocaleString('id-ID')):'-'}</div></div>
-      <div class="review-section"><h4>Data Sekolah</h4><div><b>Sekolah Asal:</b> ${sekolahLine}</div><div><b>Tahun Lulus:</b> ${s.gradYear}</div><div><b>Pas Foto:</b> ${s.photoName}</div></div>
-      <div class="hint">Saat Submit: Stage Opportunity → <b>Registration</b>.</div>`;
+      <div class="review-section">
+        <h4>Data Pemohon</h4>
+        <div><b>Nama:</b> ${p.firstName||'-'} ${p.lastName||''}</div>
+        <div><b>Email:</b> ${p.email||'-'}</div>
+        <div><b>Phone:</b> ${p.phone||'-'}</div>
+      </div>
+      <div class="review-section">
+        <h4>Preferensi Studi</h4>
+        <div><b>BSP:</b> ${r?.bspName||'-'}</div>
+        <div><b>Harga Form:</b> ${r?.bookingPrice!=null?('Rp '+Number(r.bookingPrice).toLocaleString('id-ID')):'-'}</div>
+      </div>
+      <div class="review-section">
+        <h4>Data Sekolah</h4>
+        <div><b>Sekolah Asal:</b> ${sekolahLine}</div>
+        <div><b>Tahun Lulus:</b> ${s.gradYear}</div>
+        <div><b>Pas Foto:</b> ${s.photoName}</div>
+      </div>`;
   }
 
-  // Helper to disable the final submit button
   function disableSubmitFinal() {
     const btn = $('#btnSubmitFinal');
     if (!btn) return;
     btn.disabled = true;
     btn.textContent = 'Sudah Dikirim';
-    btn.classList.add('btn-disabled'); // add CSS: .btn-disabled{opacity:.6;cursor:not-allowed}
+    btn.classList.add('btn-disabled');
   }
 
   $('#btnSubmitFinal').addEventListener('click', async ()=>{
@@ -440,7 +477,6 @@
       });
       closeLoading();
 
-      // Immediately disable after successful finalize
       disableSubmitFinal();
 
       Swal.fire({
@@ -455,27 +491,23 @@
   });
 
   // =========================
-  // DEEP LINK BOOT (supports ?opp=... OR /<OpportunityId> OR /register/<OpportunityId>)
+  // DEEP LINK BOOT
   // =========================
   function extractOppIdFromUrl() {
     const params = new URLSearchParams(location.search || '');
     const fromQS = (params.get('opp') || '').trim();
 
-    // Normalize path segments
     const raw = (location.pathname || '').replace(/^\/+|\/+$/g, '');
     const parts = raw ? raw.split('/') : [];
 
     const looksLikeSfId = s => /^[A-Za-z0-9]{15,18}$/.test(s || '');
 
-    // /register/<id>
     if (parts.length >= 2 && parts[0].toLowerCase() === 'register' && looksLikeSfId(parts[1])) {
       return parts[1];
     }
-    // /<id> at root
     if (parts.length === 1 && looksLikeSfId(parts[0])) {
       return parts[0];
     }
-    // ?opp=<id>
     if (looksLikeSfId(fromQS)) return fromQS;
 
     return '';
@@ -498,7 +530,8 @@
         firstName: j.person?.firstName || '',
         lastName : j.person?.lastName  || '',
         email    : j.person?.email     || '',
-        phone    : j.person?.phone     || ''
+        // prefer unified phone, then explicit mobilePhone, then empty
+        phone    : j.person?.phone || j.person?.mobilePhone || ''
       };
       if (j.reg) {
         S.reg = { ...S.reg, ...j.reg };
@@ -508,17 +541,14 @@
       }
       if (j.sekolah) S.sekolah = { ...S.sekolah, ...j.sekolah };
 
-      // Canonicalize to /register.html?opp=<id> so refresh works without rewrites
       const target = `/register.html?opp=${encodeURIComponent(oppId)}`;
       if (location.pathname + location.search !== target) {
         history.replaceState(null, '', target);
       }
 
-      // Update debug labels
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
 
-      // Preload dynamic data for landing step
       const stage = Math.min(5, Math.max(1, Number(j.webStage || 1)));
       $('#authGate').style.display = 'none';
       showWizardHeader(true);
@@ -533,8 +563,6 @@
       }
       if (stage === 5) {
         buildReview();
-
-        // 🔒 Disable submit if Salesforce says it's done
         if (j.isSubmitted || Number(j.webStage) === 6) {
           disableSubmitFinal();
         }
@@ -557,10 +585,8 @@
     showWizardHeader(false);
     $$('.form-step').forEach(s => s.style.display='none');
 
-    // First try to resume from URL (works with ?opp=..., /<id>, or /register/<id>)
     const resumed = await bootFromDeepLink();
     if (!resumed) {
-      // default: show login/register gate
       $('#authGate').style.display = '';
     }
   });
