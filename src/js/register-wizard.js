@@ -375,23 +375,43 @@
       if(!photo){ msg.textContent='Pilih pas foto.'; msg.style.display='block'; return; }
       if(photo.size>1024*1024){ msg.textContent='Ukuran pas foto maksimal 1MB.'; msg.style.display='block'; return; }
 
-      let payload = { opportunityId:oppId, accountId:accId, graduationYear:gradYear };
+            // inside initStep4() -> formStep4 submit handler
+      let payload = { opportunityId: oppId, accountId: accId, graduationYear: gradYear };
+
       if (manual) {
-        const name = (mName.value||'').trim();
-        const npsn = digits(mNpsn.value||'');
-        if(!name){ msg.textContent='Isi nama sekolah manual.'; msg.style.display='block'; return; }
-        if(!npsn){ msg.textContent='Isi NPSN manual (hanya angka).'; msg.style.display='block'; return; }
+        const name    = (mName.value || '').trim();
+        const npsnRaw = (mNpsn.value || '').trim();          // user-typed string
+        const npsn    = digits(npsnRaw);                     // only digits
+
+        if (!name) {
+          msg.textContent = 'Isi nama sekolah manual.';
+          msg.style.display = 'block';
+          return;
+        }
+
+        // NPSN is OPTIONAL now. Validate only if user typed something.
+        if (npsnRaw && !/^\d{8}$/.test(npsn)) {
+          msg.textContent = 'Jika diisi, NPSN harus 8 digit angka.';
+          msg.style.display = 'block';
+          return;
+        }
+
         payload.draftSchool = name;
-        payload.draftNpsn  = npsn;
-        payload.schoolName = name;
+        payload.schoolName  = name;
+        if (npsn) payload.draftNpsn = npsn;                  // send only when provided
       } else {
-        const schoolId = (hidId.value||'').trim();
-        const schoolName = (input.value||'').trim();
-        const idOk = /^[a-zA-Z0-9]{15,18}$/.test(schoolId);
-        if(!idOk){ msg.textContent='Pilih sekolah dari daftar autocomplete.'; msg.style.display='block'; return; }
+        const schoolId   = (hidId.value || '').trim();
+        const schoolName = (input.value || '').trim();
+        const idOk       = /^[a-zA-Z0-9]{15,18}$/.test(schoolId);
+        if (!idOk) {
+          msg.textContent = 'Pilih sekolah dari daftar autocomplete.';
+          msg.style.display = 'block';
+          return;
+        }
         payload.masterSchoolId = schoolId;
         payload.schoolName = schoolName;
       }
+
 
       try{
         showLoading('Menyimpan data sekolah & pas foto…');
