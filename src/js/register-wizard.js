@@ -22,7 +22,7 @@
     try { data = await res.json(); }
     catch {
       const t = await res.text().catch(()=> '');
-      throw new Error(t?.slice(0,400) || 'Server mengembalikan respons non-JSON');
+      throw new Error(t?.slice[0,400] || 'Server mengembalikan respons non-JSON');
     }
     if (!res.ok || data?.success === false) throw new Error(data?.message || `Permintaan gagal (${res.status})`);
     return data;
@@ -125,7 +125,6 @@
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
 
-      // Always canonicalize to /register.html?opp=<Id> so refresh works without rewrites
       if (S.opp) {
         const target = `/register.html?opp=${encodeURIComponent(S.opp)}`;
         if (location.pathname + location.search !== target) history.replaceState(null, '', target);
@@ -433,11 +432,10 @@
   function buildReview(){
     const p=S.pemohon, r=S.reg, s=S.sekolah;
 
-    // NPSN suffix only when provided
-    const npsnSuffix = s?.draftNpsn ? ` (NPSN: ${s.draftNpsn})` : '';
+    // No NPSN in the review anymore; show "-" if missing values
     const sekolahLine = s.mode==='manual'
-      ? `${s.schoolName}${npsnSuffix} — Manual`
-      : `${s.schoolName}`;
+      ? `${s.schoolName || '-' } — Manual`
+      : `${s.schoolName || '-'}`;
 
     $('#reviewBox').innerHTML = `
       <div class="review-section">
@@ -454,8 +452,8 @@
       <div class="review-section">
         <h4>Data Sekolah</h4>
         <div><b>Sekolah Asal:</b> ${sekolahLine}</div>
-        <div><b>Tahun Lulus:</b> ${s.gradYear}</div>
-        <div><b>Pas Foto:</b> ${s.photoName}</div>
+        <div><b>Tahun Lulus:</b> ${s.gradYear || '-'}</div>
+        <div><b>Pas Foto:</b> ${s.photoName || '-'}</div>
       </div>`;
   }
 
@@ -530,7 +528,6 @@
         firstName: j.person?.firstName || '',
         lastName : j.person?.lastName  || '',
         email    : j.person?.email     || '',
-        // prefer unified phone, then explicit mobilePhone, then empty
         phone    : j.person?.phone || j.person?.mobilePhone || ''
       };
       if (j.reg) {
