@@ -116,7 +116,6 @@ module.exports = async (req, res) => {
       return sendJSON(res, 500, { success: false, message: `Handler is not a function for route: ${routeName}` });
     }
 
-    // Delegate to the handler
     return await handler(req, res);
   } catch (err) {
     console.error('API router error:', err);
