@@ -2,9 +2,9 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/register", "destination": "/register.html" },
-    { "source": "/:oppId([A-Za-z0-9]{15,18})", "destination": "/register.html" }
+  "routes": [
+    { "src": "^/api/(.*)$", "dest": "/api/$1" },
+    { "src": "^/(?:register(?:\\.html)?)/?$", "dest": "/register.html" },
+    { "src": "^/([A-Za-z0-9]{15,18})/?$", "dest": "/register.html?opp=$1" }
   ]
 }

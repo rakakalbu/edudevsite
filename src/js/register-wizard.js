@@ -427,14 +427,16 @@
     }catch(err){ closeLoading(); showError(err.message); }
   });
 
-    // =========================
+  // =========================
   // DEEP LINK BOOT (supports ?opp=... OR /<OpportunityId>)
   // =========================
   function extractOppIdFromUrl() {
     const params = new URLSearchParams(location.search || '');
     const fromQS = (params.get('opp') || '').trim();
+
     const path = (location.pathname || '').replace(/^\/+/, '').replace(/\/+$/, '');
     const fromPath = /^[A-Za-z0-9]{15,18}$/.test(path) ? path : '';
+
     return fromQS || fromPath || '';
   }
 
@@ -443,12 +445,14 @@
     if (!oppId) return false;
 
     try {
-      showLoading('Menyiapkan formulir…');
+      // Show a small loading state
+      Swal.close();
+      Swal.fire({ title:'Menyiapkan formulir…', didOpen:()=>Swal.showLoading(), allowOutsideClick:false, showConfirmButton:false });
 
-      // Fetch details from Salesforce
+      // Fetch current state from backend
       const j = await api(`/api/register-status?opportunityId=${encodeURIComponent(oppId)}`);
 
-      // Hydrate local state
+      // Local state
       S.opp = oppId;
       S.acc = j.accountId || '';
       S.pemohon = {
@@ -457,19 +461,22 @@
         email    : j.person?.email     || '',
         phone    : j.person?.phone     || ''
       };
-      if (j.reg) S.reg = j.reg;
-      if (j.sekolah) S.sekolah = j.sekolah;
-
-      // Canonicalize URL
-      if (location.pathname !== `/${oppId}`) {
-        history.replaceState(null, '', `/${oppId}`);
+      if (j.reg) {
+        S.reg = { ...S.reg, ...j.reg };
+        if (j.reg.bookingPrice != null && $('#vaPrice')) {
+          $('#vaPrice').textContent = rupiah(j.reg.bookingPrice);
+        }
       }
+      if (j.sekolah) S.sekolah = { ...S.sekolah, ...j.sekolah };
 
-      // Update debug labels
+      // Canonicalize URL to /<OpportunityId>
+      if (location.pathname !== `/${oppId}`) history.replaceState(null, '', `/${oppId}`);
+
+      // Debug labels
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
 
-      // Show wizard at stage
+      // Show wizard at the right step
       const stage = Math.min(5, Math.max(1, Number(j.webStage || 1)));
       $('#authGate').style.display = 'none';
       showWizardHeader(true);
@@ -477,9 +484,7 @@
       if (stage <= 2) {
         await loadStep2Options();
       } else if (stage === 3) {
-        if (j.reg?.bookingPrice && $('#vaPrice')) {
-          $('#vaPrice').textContent = rupiah(j.reg.bookingPrice);
-        }
+        // VA price already hydrated above
       } else if (stage >= 4) {
         populateYears();
         initStep4();
@@ -487,11 +492,11 @@
       if (stage === 5) buildReview();
 
       setStep(stage);
-      closeLoading();
+      Swal.close();
       return true;
     } catch (e) {
       console.warn('Deep-link resume failed:', e?.message || e);
-      closeLoading();
+      Swal.close();
       return false;
     }
   }
@@ -503,10 +508,9 @@
     showWizardHeader(false);
     $$('.form-step').forEach(s => s.style.display='none');
 
-    // First try to resume from URL
     const resumed = await bootFromDeepLink();
     if (!resumed) {
-      // If no deep link, show login/register
+      // Only show login if we truly can't resume
       $('#authGate').style.display = '';
     }
   });

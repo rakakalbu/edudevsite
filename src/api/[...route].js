@@ -1,6 +1,9 @@
 // src/api/[...route].js
-// Central router that forwards /api/<name> to lib/handlers/<name>.js
-// Lazily loads only the requested handler. Resolves paths relative to this file.
+// Central router that forwards /api/<name> -> lib/handlers/<name>.js
+// - Uses your ROUTE_MAP first (aliases kept)
+// - Falls back to generic "<name>.js" so new handlers work without editing this file
+// - Resolves paths relative to this file and process.cwd() (Vercel-safe)
+// - Supports both module.exports and default export
 
 const path = require('path');
 const fs = require('fs');
@@ -11,95 +14,112 @@ function sendJSON(res, code, obj) {
   res.end(JSON.stringify(obj));
 }
 
-// Map of route -> filename (inside lib/handlers)
+// ---------- Route map (your aliases preserved) ----------
 const ROUTE_MAP = {
   // --- auth ---
-  'auth-login': 'auth-login.js',
+  'auth-login'   : 'auth-login.js',
   'auth-register': 'auth-register.js',
 
   // --- register flow ---
   'register-lead-convert': 'register-lead-convert.js',
-  'register-options': 'register-options.js',
+  'register-options'     : 'register-options.js',
 
-  // Preferred short name; long name kept as alias below
-  'register-save-educ': 'register-save-educ.js',
-  'register-save-education': 'register-save-educ.js', // alias
+  // Short + long name kept as aliases
+  'register-save-educ'      : 'register-save-educ.js',
+  'register-save-education' : 'register-save-educ.js', // alias -> same file
 
   'register-upload-proof': 'register-upload-proof.js',
   'register-upload-photo': 'register-upload-photo.js',
-  'register-finalize': 'register-finalize.js',
-  'register-status': 'register-status.js',
-  'register': 'register.js',
+  'register-finalize'    : 'register-finalize.js',
+  'register-status'      : 'register-status.js',
+  'register'             : 'register.js',
 
   // --- misc ---
   'salesforce-query': 'salesforce-query.js',
-  'webtolead': 'webtolead.js',
+  'webtolead'       : 'webtolead.js'
 };
 
-// Extra filename fallbacks for certain routes (in case only the long filename exists)
+// Extra filename fallbacks for historical names
 const FALLBACK_FILENAMES = {
-  'register-save-educ': 'register-save-education.js',
-  'register-save-education': 'register-save-education.js',
+  'register-save-educ'     : 'register-save-education.js',
+  'register-save-education': 'register-save-education.js'
 };
 
-function resolveHandlerPath(routeName) {
-  // Resolve relative to this file, not process.cwd()
-  const baseDir = path.resolve(__dirname, '../../lib/handlers');
+// ---------- Utils ----------
+function getRouteName(req) {
+  // Be robust to proxies and query strings
+  // Extract only the first segment after /api/
+  const url = req.url || '';
+  const m = url.match(/\/api\/([^/?#]+)/i);
+  return (m && m[1]) ? m[1].toLowerCase() : '';
+}
 
-  const candidates = [];
+function handlerCandidates(routeName) {
+  const relBase = path.resolve(__dirname, '../../lib/handlers'); // relative to this file
+  const cwdBase = path.join(process.cwd(), 'lib', 'handlers');   // process root (Vercel)
 
-  // 1) Mapped filename
-  if (ROUTE_MAP[routeName]) {
-    candidates.push(path.join(baseDir, ROUTE_MAP[routeName]));
+  const names = new Set();
+
+  // 1) Mapped filename (primary)
+  if (ROUTE_MAP[routeName]) names.add(ROUTE_MAP[routeName]);
+
+  // 2) Known fallbacks
+  if (FALLBACK_FILENAMES[routeName]) names.add(FALLBACK_FILENAMES[routeName]);
+
+  // 3) Generic guesses
+  names.add(`${routeName}.js`);
+  names.add(`${routeName}.mjs`); // just in case
+
+  // Build full path candidates across both bases
+  const files = Array.from(names);
+  const paths = [];
+  for (const f of files) {
+    paths.push(path.join(relBase, f));
+    paths.push(path.join(cwdBase, f));
   }
-  // 2) Known fallback filename (e.g., education ⇄ educ)
-  if (FALLBACK_FILENAMES[routeName]) {
-    candidates.push(path.join(baseDir, FALLBACK_FILENAMES[routeName]));
-  }
-  // 3) Generic guess to allow new handlers without changing this file
-  candidates.push(path.join(baseDir, `${routeName}.js`));
+  return paths;
+}
 
+function tryLoadModule(routeName) {
+  const candidates = handlerCandidates(routeName);
   for (const p of candidates) {
-    if (fs.existsSync(p)) return p;
+    if (fs.existsSync(p)) {
+      // In dev, clear require cache so edits are picked up immediately
+      if (process.env.NODE_ENV !== 'production') {
+        try { delete require.cache[require.resolve(p)]; } catch {}
+      }
+      return require(p);
+    }
   }
   return null;
 }
 
+// ---------- Router ----------
 module.exports = async (req, res) => {
   try {
-    // Build URL safely behind proxies
-    const proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0];
-    const host  = req.headers.host || 'localhost';
-    const url   = new URL(req.url, `${proto}://${host}`);
-
-    // /api/foo/ -> "foo"
-    const name = url.pathname.replace(/^\/api\//, '').replace(/\/+$/, '');
-    if (!name) {
+    const routeName = getRouteName(req);
+    if (!routeName) {
       return sendJSON(res, 404, { success: false, message: 'No API route specified' });
     }
 
-    const handlerPath = resolveHandlerPath(name);
-    if (!handlerPath) {
-      return sendJSON(res, 404, { success: false, message: `Unknown API route: ${name}` });
+    const mod = tryLoadModule(routeName);
+    if (!mod) {
+      return sendJSON(res, 404, { success: false, message: `Unknown API route: ${routeName}` });
     }
 
-    // In dev, clear cache so edits are picked up
-    if (process.env.NODE_ENV !== 'production') {
-      delete require.cache[require.resolve(handlerPath)];
-    }
-
-    const mod = require(handlerPath);
     const handler =
-      typeof mod === 'function' ? mod :
-      (mod && typeof mod.default === 'function' ? mod.default : null);
+      (typeof mod === 'function' && mod) ||
+      (mod && typeof mod.default === 'function' && mod.default) ||
+      null;
 
     if (!handler) {
-      return sendJSON(res, 500, { success: false, message: `Handler is not a function for route: ${name}` });
+      return sendJSON(res, 500, { success: false, message: `Handler is not a function for route: ${routeName}` });
     }
 
-    return handler(req, res);
+    // Delegate to the handler
+    return await handler(req, res);
   } catch (err) {
     console.error('API router error:', err);
-    return sendJSON(res, 500, { success: false, message: err.message || 'Router error' });
+    return sendJSON(res, 500, { success: false, message: err?.message || 'Router error' });
   }
 };
