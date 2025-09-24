@@ -443,7 +443,7 @@
 
     const npsnSuffix = s?.draftNpsn ? ` (NPSN: ${s.draftNpsn})` : '';
     const sekolahLine = s?.mode==='manual'
-      ? `${s.schoolName || '-'}${npsnSuffix} — Manual`
+      ? `${s.schoolName || '-'}${npsnSuffix}`
       : `${s.schoolName || '-'}`;
 
     $('#reviewBox').innerHTML = `
