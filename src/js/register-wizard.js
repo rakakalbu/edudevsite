@@ -424,14 +424,38 @@
       <div class="review-section"><h4>Data Sekolah</h4><div><b>Sekolah Asal:</b> ${sekolahLine}</div><div><b>Tahun Lulus:</b> ${s.gradYear}</div><div><b>Pas Foto:</b> ${s.photoName}</div></div>
       <div class="hint">Saat Submit: Stage Opportunity → <b>Registration</b>.</div>`;
   }
+
+  // Helper to disable the final submit button
+  function disableSubmitFinal() {
+    const btn = $('#btnSubmitFinal');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = 'Sudah Dikirim';
+    btn.classList.add('btn-disabled'); // add CSS: .btn-disabled{opacity:.6;cursor:not-allowed}
+  }
+
   $('#btnSubmitFinal').addEventListener('click', async ()=>{
     try{
       showLoading('Menyelesaikan registrasi…');
-      await api('/api/register-finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ opportunityId:S.opp, accountId:S.acc })});
+      await api('/api/register-finalize',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ opportunityId:S.opp, accountId:S.acc })
+      });
       closeLoading();
-      Swal.fire({ icon:'success', title:'Registrasi Berhasil', text:'Terima kasih. Registrasi Anda telah selesai.', confirmButtonText:'Selesai' })
-        .then(()=> location.href='thankyou.html');
-    }catch(err){ closeLoading(); showError(err.message); }
+
+      // Immediately disable after successful finalize
+      disableSubmitFinal();
+
+      Swal.fire({
+        icon:'success',
+        title:'Registrasi Berhasil',
+        text:'Terima kasih. Registrasi Anda telah selesai.',
+        confirmButtonText:'Selesai'
+      }).then(()=> location.href='thankyou.html');
+    }catch(err){
+      closeLoading(); showError(err.message);
+    }
   });
 
   // =========================
@@ -511,7 +535,14 @@
         populateYears();
         initStep4();
       }
-      if (stage === 5) buildReview();
+      if (stage === 5) {
+        buildReview();
+
+        // 🔒 Disable submit if Salesforce says it's done
+        if (j.isSubmitted || Number(j.webStage) === 6) {
+          disableSubmitFinal();
+        }
+      }
 
       setStep(stage);
       Swal.close();
