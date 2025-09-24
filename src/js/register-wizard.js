@@ -408,13 +408,13 @@
   $('#btnBack5').addEventListener('click', ()=> setStep(4));
   function buildReview(){
     const p=S.pemohon, r=S.reg, s=S.sekolah;
-    const sekolahLine = s.mode==='manual'
-      ? `${s.schoolName} (NPSN ${s.draftNpsn}) — Manual`
-      : `${s.schoolName}`;
+    const sekolahLine = s && s.mode==='manual'
+      ? `${s.schoolName} ${s.draftNpsn ? `(NPSN ${s.draftNpsn})` : ''} — Manual`
+      : (s?.schoolName || '-');
     $('#reviewBox').innerHTML = `
       <div class="review-section"><h4>Data Pemohon</h4><div><b>Nama:</b> ${p.firstName||'-'} ${p.lastName||''}</div><div><b>Email:</b> ${p.email||'-'}</div><div><b>Phone:</b> ${p.phone||'-'}</div></div>
       <div class="review-section"><h4>Preferensi Studi</h4><div><b>BSP:</b> ${r?.bspName||'-'}</div><div><b>Harga Form:</b> ${r?.bookingPrice!=null?('Rp '+Number(r.bookingPrice).toLocaleString('id-ID')):'-'}</div></div>
-      <div class="review-section"><h4>Data Sekolah</h4><div><b>Sekolah Asal:</b> ${sekolahLine}</div><div><b>Tahun Lulus:</b> ${s.gradYear}</div><div><b>Pas Foto:</b> ${s.photoName}</div></div>
+      <div class="review-section"><h4>Data Sekolah</h4><div><b>Sekolah Asal:</b> ${sekolahLine}</div><div><b>Tahun Lulus:</b> ${s?.gradYear||'-'}</div><div><b>Pas Foto:</b> ${s?.photoName || '-'}</div></div>
       <div class="hint">Saat Submit: Stage Opportunity → <b>Registration</b>.</div>`;
   }
   $('#btnSubmitFinal').addEventListener('click', async ()=>{
@@ -433,10 +433,8 @@
   function extractOppIdFromUrl() {
     const params = new URLSearchParams(location.search || '');
     const fromQS = (params.get('opp') || '').trim();
-
     const path = (location.pathname || '').replace(/^\/+/, '').replace(/\/+$/, '');
     const fromPath = /^[A-Za-z0-9]{15,18}$/.test(path) ? path : '';
-
     return fromQS || fromPath || '';
   }
 
@@ -447,7 +445,7 @@
     try {
       showLoading('Menyiapkan formulir…');
 
-      // Fetch current web stage + basic person/account info
+      // Fetch current web stage + details for hydration
       const j = await api(`/api/register-status?opportunityId=${encodeURIComponent(oppId)}`);
 
       // Save local state so the rest of the wizard works as-is
@@ -459,6 +457,27 @@
         email    : j.person?.email     || j.email     || '',
         phone    : j.person?.phone     || j.phone     || ''
       };
+
+      // Hydrate reg/sekolah so Step 3 & 5 have data even when user skips earlier steps
+      if (j.reg) {
+        S.reg = {
+          ...S.reg,
+          bspName: j.reg.bspName || null,
+          bookingPrice: j.reg.bookingPrice ?? null
+        };
+        if (j.reg.bookingPrice != null && $('#vaPrice')) {
+          $('#vaPrice').textContent = rupiah(j.reg.bookingPrice);
+        }
+      }
+      if (j.sekolah) {
+        S.sekolah = {
+          ...S.sekolah,
+          mode: j.sekolah.mode || null,
+          schoolName: j.sekolah.schoolName || null,
+          draftNpsn: j.sekolah.draftNpsn || null,
+          gradYear: j.sekolah.gradYear || null
+        };
+      }
 
       // Canonicalize URL to /<OpportunityId> (nice shareable link)
       if (location.pathname !== `/${oppId}`) {
@@ -478,12 +497,14 @@
       if (stage <= 2) {
         await loadStep2Options();
       } else if (stage === 3) {
-        // if backend exposes price, show it
-        if (j.bookingPrice != null) $('#vaPrice').textContent = rupiah(j.bookingPrice);
+        // price already hydrated above if available
       } else if (stage >= 4) {
         populateYears();
         initStep4();
       }
+
+      // If arriving at Step 5 via link, render the summary now
+      if (stage === 5) buildReview();
 
       setStep(stage);
       closeLoading();
