@@ -10,6 +10,7 @@
          display:grid;place-items:center;height:100vh;margin:0;color:#111}
     .box{max-width:520px;padding:24px;border:1px solid #eee;border-radius:12px}
     .muted{color:#6b7280}
+    a{color:#4f46e5}
   </style>
 </head>
 <body>
@@ -20,13 +21,23 @@
 
   <script>
     (function () {
-      // Path without slashes, e.g. "006gL00000C1H05QAN"
-      const path = (location.pathname || '/').replace(/^\/+|\/+$/g, '');
+      // Path without leading/trailing slashes
+      var rawPath = (location.pathname || '/').replace(/^\/+|\/+$/g, '');
+      // e.g. ["register","006..."] or ["006..."] or []
+      var parts = rawPath ? rawPath.split('/') : [];
 
-      // If the path looks like a Salesforce Id (15–18 alphanumeric),
-      // send the user to the form carrying ?opp=<Id>.
-      if (/^[A-Za-z0-9]{15,18}$/.test(path)) {
-        location.replace(`/register.html?opp=${encodeURIComponent(path)}`);
+      // Pattern: pure SF Id at root, e.g. /006gL00000C1H05QAN
+      var looksLikeSfId = function (s) { return /^[A-Za-z0-9]{15,18}$/.test(s || ''); };
+
+      // /register/<OppId>
+      if (parts.length === 2 && parts[0].toLowerCase() === 'register' && looksLikeSfId(parts[1])) {
+        location.replace('/register.html?opp=' + encodeURIComponent(parts[1]));
+        return;
+      }
+
+      // /<OppId> at root
+      if (parts.length === 1 && looksLikeSfId(parts[0])) {
+        location.replace('/register.html?opp=' + encodeURIComponent(parts[0]));
         return;
       }
 

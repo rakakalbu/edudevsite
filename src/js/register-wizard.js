@@ -428,16 +428,30 @@
   });
 
   // =========================
-  // DEEP LINK BOOT (supports ?opp=... OR /<OpportunityId>)
+  // DEEP LINK BOOT (supports ?opp=... OR /<OpportunityId> OR /register/<OpportunityId>)
   // =========================
   function extractOppIdFromUrl() {
     const params = new URLSearchParams(location.search || '');
     const fromQS = (params.get('opp') || '').trim();
 
-    const path = (location.pathname || '').replace(/^\/+/, '').replace(/\/+$/, '');
-    const fromPath = /^[A-Za-z0-9]{15,18}$/.test(path) ? path : '';
+    // Normalize path segments
+    const raw = (location.pathname || '').replace(/^\/+|\/+$/g, '');
+    const parts = raw ? raw.split('/') : [];
 
-    return fromQS || fromPath || '';
+    const looksLikeSfId = s => /^[A-Za-z0-9]{15,18}$/.test(s || '');
+
+    // /register/<id>
+    if (parts.length >= 2 && parts[0].toLowerCase() === 'register' && looksLikeSfId(parts[1])) {
+      return parts[1];
+    }
+    // /<id> at root
+    if (parts.length === 1 && looksLikeSfId(parts[0])) {
+      return parts[0];
+    }
+    // ?opp=<id>
+    if (looksLikeSfId(fromQS)) return fromQS;
+
+    return '';
   }
 
   async function bootFromDeepLink() {
@@ -445,14 +459,12 @@
     if (!oppId) return false;
 
     try {
-      // Show a small loading state
       Swal.close();
       Swal.fire({ title:'Menyiapkan formulir…', didOpen:()=>Swal.showLoading(), allowOutsideClick:false, showConfirmButton:false });
 
-      // Fetch current state from backend
       const j = await api(`/api/register-status?opportunityId=${encodeURIComponent(oppId)}`);
 
-      // Local state
+      // Hydrate local state
       S.opp = oppId;
       S.acc = j.accountId || '';
       S.pemohon = {
@@ -469,8 +481,11 @@
       }
       if (j.sekolah) S.sekolah = { ...S.sekolah, ...j.sekolah };
 
-      // Canonicalize URL to /<OpportunityId>
-      if (location.pathname !== `/${oppId}`) history.replaceState(null, '', `/${oppId}`);
+      // Canonicalize to /register.html?opp=<id> so refreshes always work
+      const target = `/register.html?opp=${encodeURIComponent(oppId)}`;
+      if (location.pathname + location.search !== target) {
+        history.replaceState(null, '', target);
+      }
 
       // Debug labels
       $('#opptyIdLabel').textContent = S.opp;
@@ -484,7 +499,7 @@
       if (stage <= 2) {
         await loadStep2Options();
       } else if (stage === 3) {
-        // VA price already hydrated above
+        // price already hydrated above
       } else if (stage >= 4) {
         populateYears();
         initStep4();
