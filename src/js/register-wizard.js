@@ -35,6 +35,15 @@
   }
   const rupiah = (n) => (n == null || isNaN(n)) ? 'Rp -' : 'Rp ' + Number(n).toLocaleString('id-ID');
 
+  // Merge helper that ignores null/undefined/'' from source
+  function mergeDefined(target = {}, source = {}) {
+    const out = { ...target };
+    for (const [k,v] of Object.entries(source)) {
+      if (v !== null && v !== undefined && !(typeof v === 'string' && v.trim() === '')) out[k] = v;
+    }
+    return out;
+  }
+
   // === Local state
   const K = (k) => `m7_reg_${k}`;
   const S = {
@@ -125,7 +134,6 @@
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
 
-      // Always canonicalize to /register.html?opp=<Id> so refresh works without rewrites
       if (S.opp) {
         const target = `/register.html?opp=${encodeURIComponent(S.opp)}`;
         if (location.pathname + location.search !== target) history.replaceState(null, '', target);
@@ -431,18 +439,17 @@
   // =========================
   $('#btnBack5').addEventListener('click', ()=> setStep(4));
   function buildReview(){
-    const p=S.pemohon, r=S.reg, s=S.sekolah;
+    const p=S.pemohon||{}, r=S.reg||{}, s=S.sekolah||{};
 
-    // NPSN suffix only when provided
     const npsnSuffix = s?.draftNpsn ? ` (NPSN: ${s.draftNpsn})` : '';
-    const sekolahLine = s.mode==='manual'
-      ? `${s.schoolName}${npsnSuffix} — Manual`
-      : `${s.schoolName}`;
+    const sekolahLine = s?.mode==='manual'
+      ? `${s.schoolName || '-'}${npsnSuffix} — Manual`
+      : `${s.schoolName || '-'}`;
 
     $('#reviewBox').innerHTML = `
       <div class="review-section">
         <h4>Data Pemohon</h4>
-        <div><b>Nama:</b> ${p.firstName||'-'} ${p.lastName||''}</div>
+        <div><b>Nama:</b> ${(p.firstName||'-')} ${(p.lastName||'')}</div>
         <div><b>Email:</b> ${p.email||'-'}</div>
         <div><b>Phone:</b> ${p.phone||'-'}</div>
       </div>
@@ -454,8 +461,8 @@
       <div class="review-section">
         <h4>Data Sekolah</h4>
         <div><b>Sekolah Asal:</b> ${sekolahLine}</div>
-        <div><b>Tahun Lulus:</b> ${s.gradYear}</div>
-        <div><b>Pas Foto:</b> ${s.photoName}</div>
+        <div><b>Tahun Lulus:</b> ${s?.gradYear ?? '-'}</div>
+        <div><b>Pas Foto:</b> ${s?.photoName ?? '-'}</div>
       </div>`;
   }
 
@@ -523,23 +530,25 @@
 
       const j = await api(`/api/register-status?opportunityId=${encodeURIComponent(oppId)}`);
 
-      // Hydrate local state
+      // Hydrate local state (do NOT overwrite with nulls)
       S.opp = oppId;
       S.acc = j.accountId || '';
-      S.pemohon = {
-        firstName: j.person?.firstName || '',
-        lastName : j.person?.lastName  || '',
-        email    : j.person?.email     || '',
-        // prefer unified phone, then explicit mobilePhone, then empty
-        phone    : j.person?.phone || j.person?.mobilePhone || ''
-      };
+      S.pemohon = mergeDefined(S.pemohon, {
+        firstName: j.person?.firstName,
+        lastName : j.person?.lastName,
+        email    : j.person?.email,
+        phone    : j.person?.phone || j.person?.mobilePhone
+      });
+
       if (j.reg) {
-        S.reg = { ...S.reg, ...j.reg };
-        if (j.reg.bookingPrice != null && $('#vaPrice')) {
-          $('#vaPrice').textContent = rupiah(j.reg.bookingPrice);
+        S.reg = mergeDefined(S.reg, j.reg);
+        if (S.reg.bookingPrice != null && $('#vaPrice')) {
+          $('#vaPrice').textContent = rupiah(S.reg.bookingPrice);
         }
       }
-      if (j.sekolah) S.sekolah = { ...S.sekolah, ...j.sekolah };
+      if (j.sekolah) {
+        S.sekolah = mergeDefined(S.sekolah, j.sekolah); // preserve existing gradYear if API returned null
+      }
 
       const target = `/register.html?opp=${encodeURIComponent(oppId)}`;
       if (location.pathname + location.search !== target) {
