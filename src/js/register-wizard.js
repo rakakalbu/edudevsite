@@ -427,7 +427,7 @@
     }catch(err){ closeLoading(); showError(err.message); }
   });
 
-  // =========================
+    // =========================
   // DEEP LINK BOOT (supports ?opp=... OR /<OpportunityId>)
   // =========================
   function extractOppIdFromUrl() {
@@ -445,41 +445,22 @@
     try {
       showLoading('Menyiapkan formulir…');
 
-      // Fetch current web stage + details for hydration
+      // Fetch details from Salesforce
       const j = await api(`/api/register-status?opportunityId=${encodeURIComponent(oppId)}`);
 
-      // Save local state so the rest of the wizard works as-is
+      // Hydrate local state
       S.opp = oppId;
       S.acc = j.accountId || '';
       S.pemohon = {
-        firstName: j.person?.firstName || j.firstName || '',
-        lastName : j.person?.lastName  || j.lastName  || '',
-        email    : j.person?.email     || j.email     || '',
-        phone    : j.person?.phone     || j.phone     || ''
+        firstName: j.person?.firstName || '',
+        lastName : j.person?.lastName  || '',
+        email    : j.person?.email     || '',
+        phone    : j.person?.phone     || ''
       };
+      if (j.reg) S.reg = j.reg;
+      if (j.sekolah) S.sekolah = j.sekolah;
 
-      // Hydrate reg/sekolah so Step 3 & 5 have data even when user skips earlier steps
-      if (j.reg) {
-        S.reg = {
-          ...S.reg,
-          bspName: j.reg.bspName || null,
-          bookingPrice: j.reg.bookingPrice ?? null
-        };
-        if (j.reg.bookingPrice != null && $('#vaPrice')) {
-          $('#vaPrice').textContent = rupiah(j.reg.bookingPrice);
-        }
-      }
-      if (j.sekolah) {
-        S.sekolah = {
-          ...S.sekolah,
-          mode: j.sekolah.mode || null,
-          schoolName: j.sekolah.schoolName || null,
-          draftNpsn: j.sekolah.draftNpsn || null,
-          gradYear: j.sekolah.gradYear || null
-        };
-      }
-
-      // Canonicalize URL to /<OpportunityId> (nice shareable link)
+      // Canonicalize URL
       if (location.pathname !== `/${oppId}`) {
         history.replaceState(null, '', `/${oppId}`);
       }
@@ -488,22 +469,21 @@
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
 
-      // Show wizard at the right step (clamp 1..5)
+      // Show wizard at stage
       const stage = Math.min(5, Math.max(1, Number(j.webStage || 1)));
       $('#authGate').style.display = 'none';
       showWizardHeader(true);
 
-      // Preload dynamic data for the landing step
       if (stage <= 2) {
         await loadStep2Options();
       } else if (stage === 3) {
-        // price already hydrated above if available
+        if (j.reg?.bookingPrice && $('#vaPrice')) {
+          $('#vaPrice').textContent = rupiah(j.reg.bookingPrice);
+        }
       } else if (stage >= 4) {
         populateYears();
         initStep4();
       }
-
-      // If arriving at Step 5 via link, render the summary now
       if (stage === 5) buildReview();
 
       setStep(stage);
@@ -512,7 +492,6 @@
     } catch (e) {
       console.warn('Deep-link resume failed:', e?.message || e);
       closeLoading();
-      // Fall back to auth gate
       return false;
     }
   }
@@ -524,10 +503,10 @@
     showWizardHeader(false);
     $$('.form-step').forEach(s => s.style.display='none');
 
-    // Try deep-link resume first
+    // First try to resume from URL
     const resumed = await bootFromDeepLink();
     if (!resumed) {
-      // default: show login/register gate
+      // If no deep link, show login/register
       $('#authGate').style.display = '';
     }
   });
