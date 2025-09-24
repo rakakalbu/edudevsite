@@ -25,44 +25,9 @@
     .va-row:first-of-type{border-top:none}
     .value.code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     .price{font-weight:700;font-size:18px}
-
-    /* === Top-right Login button (like the screenshot) === */
-    .header-login-btn{
-      position:fixed;
-      top:18px;
-      right:18px;
-      z-index:60;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 18px;
-      border-radius:999px;
-      background:#6d28d9;         /* brand-ish purple */
-      color:#fff;
-      font-weight:700;
-      text-decoration:none;
-      box-shadow:0 6px 18px rgba(109,40,217,.25);
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-    }
-    .header-login-btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 22px rgba(109,40,217,.3);
-    }
-    .header-login-btn:active{ transform:translateY(0) scale(.99); }
-    @media (max-width:640px){
-      .header-login-btn{ top:12px; right:12px; padding:8px 14px; }
-    }
   </style>
 </head>
 <body>
-  <!-- Top-right Login (external) -->
-  <a
-    class="header-login-btn"
-    href="https://salesforceedupakcage.vercel.app/login"
-    target="_blank" rel="noopener"
-    aria-label="Login Portal"
-  >Login</a>
-
   <main class="form-container">
 
     <a href="index.html" class="btn-back">← Kembali ke Beranda</a>
