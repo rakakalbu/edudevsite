@@ -1,3 +1,5 @@
+/* public/js/register-wizard.js */
+
 (() => {
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -123,8 +125,11 @@
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
 
-      // Make the URL shareable: /<OpportunityId>
-      if (S.opp && location.pathname !== `/${S.opp}`) history.replaceState(null, '', `/${S.opp}`);
+      // Always canonicalize to /register.html?opp=<Id> so refresh works without rewrites
+      if (S.opp) {
+        const target = `/register.html?opp=${encodeURIComponent(S.opp)}`;
+        if (location.pathname + location.search !== target) history.replaceState(null, '', target);
+      }
 
       closeLoading();
       toastOk('Masuk berhasil. Lanjut pilih program.');
@@ -168,8 +173,10 @@
       S.opp=j.opportunityId; S.acc=j.accountId; S.pemohon={firstName,lastName,email,phone};
       $('#opptyIdLabel').textContent=j.opportunityId; $('#accountIdLabel').textContent=j.accountId;
 
-      // Make the URL shareable: /<OpportunityId>
-      if (S.opp && location.pathname !== `/${S.opp}`) history.replaceState(null, '', `/${S.opp}`);
+      if (S.opp) {
+        const target = `/register.html?opp=${encodeURIComponent(S.opp)}`;
+        if (location.pathname + location.search !== target) history.replaceState(null, '', target);
+      }
 
       closeLoading(); toastOk('Akun dibuat. Pilih program.');
       setStep(2);
@@ -408,13 +415,13 @@
   $('#btnBack5').addEventListener('click', ()=> setStep(4));
   function buildReview(){
     const p=S.pemohon, r=S.reg, s=S.sekolah;
-    const sekolahLine = s && s.mode==='manual'
-      ? `${s.schoolName} ${s.draftNpsn ? `(NPSN ${s.draftNpsn})` : ''} — Manual`
-      : (s?.schoolName || '-');
+    const sekolahLine = s.mode==='manual'
+      ? `${s.schoolName} (NPSN ${s.draftNpsn}) — Manual`
+      : `${s.schoolName}`;
     $('#reviewBox').innerHTML = `
       <div class="review-section"><h4>Data Pemohon</h4><div><b>Nama:</b> ${p.firstName||'-'} ${p.lastName||''}</div><div><b>Email:</b> ${p.email||'-'}</div><div><b>Phone:</b> ${p.phone||'-'}</div></div>
       <div class="review-section"><h4>Preferensi Studi</h4><div><b>BSP:</b> ${r?.bspName||'-'}</div><div><b>Harga Form:</b> ${r?.bookingPrice!=null?('Rp '+Number(r.bookingPrice).toLocaleString('id-ID')):'-'}</div></div>
-      <div class="review-section"><h4>Data Sekolah</h4><div><b>Sekolah Asal:</b> ${sekolahLine}</div><div><b>Tahun Lulus:</b> ${s?.gradYear||'-'}</div><div><b>Pas Foto:</b> ${s?.photoName || '-'}</div></div>
+      <div class="review-section"><h4>Data Sekolah</h4><div><b>Sekolah Asal:</b> ${sekolahLine}</div><div><b>Tahun Lulus:</b> ${s.gradYear}</div><div><b>Pas Foto:</b> ${s.photoName}</div></div>
       <div class="hint">Saat Submit: Stage Opportunity → <b>Registration</b>.</div>`;
   }
   $('#btnSubmitFinal').addEventListener('click', async ()=>{
@@ -481,17 +488,17 @@
       }
       if (j.sekolah) S.sekolah = { ...S.sekolah, ...j.sekolah };
 
-      // Canonicalize to /register.html?opp=<id> so refreshes always work
+      // Canonicalize to /register.html?opp=<id> so refresh works without rewrites
       const target = `/register.html?opp=${encodeURIComponent(oppId)}`;
       if (location.pathname + location.search !== target) {
         history.replaceState(null, '', target);
       }
 
-      // Debug labels
+      // Update debug labels
       $('#opptyIdLabel').textContent = S.opp;
       $('#accountIdLabel').textContent = S.acc;
 
-      // Show wizard at the right step
+      // Preload dynamic data for landing step
       const stage = Math.min(5, Math.max(1, Number(j.webStage || 1)));
       $('#authGate').style.display = 'none';
       showWizardHeader(true);
@@ -499,7 +506,7 @@
       if (stage <= 2) {
         await loadStep2Options();
       } else if (stage === 3) {
-        // price already hydrated above
+        // price already hydrated
       } else if (stage >= 4) {
         populateYears();
         initStep4();
@@ -523,9 +530,10 @@
     showWizardHeader(false);
     $$('.form-step').forEach(s => s.style.display='none');
 
+    // First try to resume from URL (works with ?opp=..., /<id>, or /register/<id>)
     const resumed = await bootFromDeepLink();
     if (!resumed) {
-      // Only show login if we truly can't resume
+      // default: show login/register gate
       $('#authGate').style.display = '';
     }
   });
