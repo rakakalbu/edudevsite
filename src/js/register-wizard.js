@@ -444,28 +444,34 @@
       form.dataset.boundSubmit = '1';
     }
 
-    // --- CLICK→SUBMIT SHIM (handles buttons that are not type=submit) ---
+    // --- STEP 4 click/submit wiring ---
+    if (!form.dataset.boundDirectBtn) {
+      const primaryBtn = form.querySelector('.actions .submit-btn');
+      if (primaryBtn) {
+        primaryBtn.addEventListener('click', (ev) => {
+          // Always force a real submit (prevents any overlay/handler from swallowing the click)
+          ev.preventDefault();
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else form.dispatchEvent(new Event('submit', { cancelable:true, bubbles:true }));
+        });
+      }
+      form.dataset.boundDirectBtn = '1';
+    }
+
+    // --- Safe click→submit shim (does not block native submits) ---
     if (!form.dataset.boundClickShim) {
       form.addEventListener('click', (ev) => {
         const backBtn = $('#btnBack4');
-        const isBack = backBtn && (ev.target === backBtn || backBtn.contains(ev.target));
-        if (isBack) return;
+        if (backBtn && (ev.target === backBtn || backBtn.contains(ev.target))) return;
 
-        const btn = ev.target.closest('button, a, input[type="submit"]');
+        const btn = ev.target.closest('a');
         if (!btn) return;
-
-        // Heuristic: treat primary-looking controls as submit
-        const looksPrimary = btn.matches('input[type="submit"], button[type="submit"], .btn-primary');
-        if (!looksPrimary) return;
-
-        // If it's not a real submit button, submit programmatically.
-        const isRealSubmit = (btn.tagName === 'BUTTON' && (btn.type === 'submit' || btn.getAttribute('type') === null))
-                          || (btn.tagName === 'INPUT'  && btn.type === 'submit');
-
-        if (!isRealSubmit) {
+        // If someone styles an <a> like the primary button, treat it as submit
+        const looksSubmit = btn.classList.contains('submit-btn') || btn.classList.contains('btn-primary');
+        if (looksSubmit) {
           ev.preventDefault();
           if (typeof form.requestSubmit === 'function') form.requestSubmit();
-          else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+          else form.dispatchEvent(new Event('submit', { cancelable:true, bubbles:true }));
         }
       });
       form.dataset.boundClickShim = '1';
