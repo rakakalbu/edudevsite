@@ -59,24 +59,25 @@
     get sekolah(){ try{ return JSON.parse(localStorage.getItem(K('sekolah'))||'{}'); }catch{ return {}; } },
   };
 
-  // === Fresh-start helpers (ONLY place we touch global flow)
+  // === helpers to start NEW registration without reload
   function clearAllRegState() {
     try {
-      Object.keys(localStorage).forEach(k => { if (k.startsWith('m7_reg_')) localStorage.removeItem(k); });
+      ['opp','acc','pemohon','reg','sekolah'].forEach(k => localStorage.removeItem(K(k)));
     } catch {}
   }
-  function navigateToCleanRegister() {
-    // one-shot guard to block resume on next load
-    sessionStorage.setItem('m7_reg_skip_resume_once', '1');
-    // hard clean URL: no id in path, no ?opp. Keep a marker so we can skip resume.
-    location.assign('/register.html?fresh=1');
-  }
-  function shouldSkipResume() {
+  function stripOppAndFreshFromUrlWithoutReload() {
     const url = new URL(location.href);
-    const byQuery = url.searchParams.get('fresh') === '1';
-    const byFlag  = sessionStorage.getItem('m7_reg_skip_resume_once') === '1';
-    if (byFlag) sessionStorage.removeItem('m7_reg_skip_resume_once');
-    return byQuery || byFlag;
+    url.searchParams.delete('opp');
+    url.searchParams.delete('fresh');
+    // normalize pretty routes like /register/<id> → /register
+    const path = (location.pathname || '').replace(/^\/+|\/+$/g,'');
+    const parts = path ? path.split('/') : [];
+    let newPath = location.pathname;
+    if (parts.length >= 2 && parts[0].toLowerCase() === 'register') {
+      newPath = '/register';
+    }
+    const qs = url.searchParams.toString();
+    history.replaceState(null, '', newPath + (qs ? `?${qs}` : ''));
   }
 
   // === UI helpers
@@ -132,10 +133,12 @@
     setStep(startStep);
   }
 
-  // Start NEW registration — hard reset + clean URL (prevents resume)
+  // “Daftar Sekarang” → start a NEW registration WITHOUT reloading
   $('#btnShowRegister')?.addEventListener('click', () => {
-    clearAllRegState();
-    navigateToCleanRegister();
+    clearAllRegState();               // drop old opp/acc/state
+    stripOppAndFreshFromUrlWithoutReload(); // clean URL so no deep-link
+    S.opp = ''; S.acc = '';           // hard reset in-memory too
+    openWizardFromAuth(1);            // show Step 1 immediately
   });
 
   $('#formLogin')?.addEventListener('submit', async (e)=>{
@@ -193,7 +196,7 @@
     if(pass!==pass2){ msg.textContent='Ulangi kata sandi tidak cocok.'; msg.style.display='block'; return; }
 
     try{
-      // absolute clean before creating a brand-new registration
+      // make sure we aren't reusing any old opp/acc
       clearAllRegState();
       S.opp = ''; S.acc = '';
 
@@ -203,7 +206,6 @@
       const j = await api('/api/auth-register',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        // pass a hint; harmless if server ignores it
         body: JSON.stringify({ firstName,lastName,email,phone,password:pass, forceNew:true })
       });
 
@@ -614,9 +616,6 @@
   }
 
   async function bootFromDeepLink() {
-    // NEW: allow users to explicitly skip resume (fresh start)
-    if (shouldSkipResume()) return false;
-
     const oppId = extractOppIdFromUrl();
     if (!oppId) return false;
 
