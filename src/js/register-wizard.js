@@ -203,10 +203,12 @@
       showWizardHeader(true);
       showLoading('Mendaftarkan akun…');
 
+      // IMPORTANT: do NOT force new creation.
+      // Let the API convert an existing Lead when one matches.
       const j = await api('/api/auth-register',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ firstName,lastName,email,phone,password:pass, forceNew:true })
+        body: JSON.stringify({ firstName,lastName,email,phone,password:pass /* no forceNew */ })
       });
 
       S.opp=j.opportunityId; S.acc=j.accountId; S.pemohon={firstName,lastName,email,phone};
@@ -217,7 +219,7 @@
         if (location.pathname + location.search !== target) history.replaceState(null, '', target);
       }
 
-      closeLoading(); toastOk('Akun dibuat. Pilih program.');
+      closeLoading(); toastOk('Akun disiapkan. Pilih program.');
       setStep(2);
       updateStage(2);
       loadStep2Options();
