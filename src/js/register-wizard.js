@@ -59,23 +59,24 @@
     get sekolah(){ try{ return JSON.parse(localStorage.getItem(K('sekolah'))||'{}'); }catch{ return {}; } },
   };
 
-  // === Helpers to start a fresh registration (core fix) ===
+  // === Fresh-start helpers (ONLY place we touch global flow)
   function clearAllRegState() {
     try {
-      ['opp','acc','pemohon','reg','sekolah'].forEach(k => localStorage.removeItem(K(k)));
+      Object.keys(localStorage).forEach(k => { if (k.startsWith('m7_reg_')) localStorage.removeItem(k); });
     } catch {}
   }
-  function stripOppFromUrl() {
+  function navigateToCleanRegister() {
+    // one-shot guard to block resume on next load
+    sessionStorage.setItem('m7_reg_skip_resume_once', '1');
+    // hard clean URL: no id in path, no ?opp. Keep a marker so we can skip resume.
+    location.assign('/register.html?fresh=1');
+  }
+  function shouldSkipResume() {
     const url = new URL(location.href);
-    if (url.searchParams.has('opp')) {
-      url.searchParams.delete('opp');
-      history.replaceState(null, '', url.pathname + (url.search ? ('?'+url.searchParams.toString()) : '') || '/register.html');
-    }
-    // Also normalize to /register.html without stray sfid path segment
-    const raw = (location.pathname || '').replace(/^\/+|\/+$/g, '').split('/');
-    if (raw.length === 2 && raw[0].toLowerCase() === 'register') {
-      history.replaceState(null, '', '/register.html');
-    }
+    const byQuery = url.searchParams.get('fresh') === '1';
+    const byFlag  = sessionStorage.getItem('m7_reg_skip_resume_once') === '1';
+    if (byFlag) sessionStorage.removeItem('m7_reg_skip_resume_once');
+    return byQuery || byFlag;
   }
 
   // === UI helpers
@@ -131,11 +132,10 @@
     setStep(startStep);
   }
 
-  // START NEW: purge old state and strip opp from URL (CORE FIX)
+  // Start NEW registration — hard reset + clean URL (prevents resume)
   $('#btnShowRegister')?.addEventListener('click', () => {
     clearAllRegState();
-    stripOppFromUrl();
-    openWizardFromAuth(1);
+    navigateToCleanRegister();
   });
 
   $('#formLogin')?.addEventListener('submit', async (e)=>{
@@ -193,10 +193,9 @@
     if(pass!==pass2){ msg.textContent='Ulangi kata sandi tidak cocok.'; msg.style.display='block'; return; }
 
     try{
-      // CORE FIX: ensure absolutely clean state before creating a new registration
+      // absolute clean before creating a brand-new registration
       clearAllRegState();
       S.opp = ''; S.acc = '';
-      stripOppFromUrl();
 
       showWizardHeader(true);
       showLoading('Mendaftarkan akun…');
@@ -204,7 +203,8 @@
       const j = await api('/api/auth-register',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ firstName,lastName,email,phone,password:pass })
+        // pass a hint; harmless if server ignores it
+        body: JSON.stringify({ firstName,lastName,email,phone,password:pass, forceNew:true })
       });
 
       S.opp=j.opportunityId; S.acc=j.accountId; S.pemohon={firstName,lastName,email,phone};
@@ -614,6 +614,9 @@
   }
 
   async function bootFromDeepLink() {
+    // NEW: allow users to explicitly skip resume (fresh start)
+    if (shouldSkipResume()) return false;
+
     const oppId = extractOppIdFromUrl();
     if (!oppId) return false;
 
