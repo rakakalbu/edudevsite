@@ -35,7 +35,6 @@
   }
   const rupiah = (n) => (n == null || isNaN(n)) ? 'Rp -' : 'Rp ' + Number(n).toLocaleString('id-ID');
 
-  // Merge helper that ignores null/undefined/'' from source
   function mergeDefined(target = {}, source = {}) {
     const out = { ...target };
     for (const [k,v] of Object.entries(source)) {
@@ -69,7 +68,6 @@
     const url = new URL(location.href);
     url.searchParams.delete('opp');
     url.searchParams.delete('fresh');
-    // normalize pretty routes like /register/<id> → /register
     const path = (location.pathname || '').replace(/^\/+|\/+$/g,'');
     const parts = path ? path.split('/') : [];
     let newPath = location.pathname;
@@ -124,21 +122,17 @@
     }
   }
 
-  // =========================
-  // AUTH GATE
-  // =========================
   function openWizardFromAuth(startStep=1){
     $('#authGate').style.display = 'none';
     showWizardHeader(true);
     setStep(startStep);
   }
 
-  // “Daftar Sekarang” → start a NEW registration WITHOUT reloading
   $('#btnShowRegister')?.addEventListener('click', () => {
-    clearAllRegState();               // drop old opp/acc/state
-    stripOppAndFreshFromUrlWithoutReload(); // clean URL so no deep-link
-    S.opp = ''; S.acc = '';           // hard reset in-memory too
-    openWizardFromAuth(1);            // show Step 1 immediately
+    clearAllRegState();
+    stripOppAndFreshFromUrlWithoutReload();
+    S.opp = ''; S.acc = '';
+    openWizardFromAuth(1);
   });
 
   $('#formLogin')?.addEventListener('submit', async (e)=>{
@@ -196,19 +190,18 @@
     if(pass!==pass2){ msg.textContent='Ulangi kata sandi tidak cocok.'; msg.style.display='block'; return; }
 
     try{
-      // make sure we aren't reusing any old opp/acc
+      // hard reset state AND make sure any old ?opp=… is stripped even if user came from deep-link
       clearAllRegState();
+      stripOppAndFreshFromUrlWithoutReload();   // <<< added: prevent accidental resume of an old opp
       S.opp = ''; S.acc = '';
 
       showWizardHeader(true);
       showLoading('Mendaftarkan akun…');
 
-      // IMPORTANT: do NOT force new creation.
-      // Let the API convert an existing Lead when one matches.
       const j = await api('/api/auth-register',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ firstName,lastName,email,phone,password:pass /* no forceNew */ })
+        body: JSON.stringify({ firstName,lastName,email,phone,password:pass })
       });
 
       S.opp=j.opportunityId; S.acc=j.accountId; S.pemohon={firstName,lastName,email,phone};
@@ -479,8 +472,7 @@
             payload.schoolName  = nameTyped;
             sMode='manual'; schoolName=nameTyped;
           } else {
-            msg.textContent='Pilih sekolah dari daftar autocomplete atau centang "Sekolah tidak ditemukan" untuk input manual.';
-            msg.style.display='block';
+            msg.textContent='Pilih sekolah dari daftar autocomplete atau centang "Sekolah tidak ditemukan" untuk input manual.'; msg.style.display='block';
             input?.focus();
             return;
           }
@@ -627,7 +619,6 @@
 
       const j = await api(`/api/register-status?opportunityId=${encodeURIComponent(oppId)}`);
 
-      // Hydrate local state (do NOT overwrite with nulls)
       S.opp = oppId;
       S.acc = j.accountId || '';
       S.pemohon = mergeDefined(S.pemohon, {
@@ -662,7 +653,6 @@
       if (stage <= 2) {
         await loadStep2Options();
       } else if (stage === 3) {
-        // price already hydrated
       } else if (stage >= 4) {
         populateYears();
         initStep4();
@@ -684,9 +674,6 @@
     }
   }
 
-  // =========================
-  // init
-  // =========================
   document.addEventListener('DOMContentLoaded', async ()=>{
     showWizardHeader(false);
     $$('.form-step').forEach(s => s.style.display='none');
