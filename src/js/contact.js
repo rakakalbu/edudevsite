@@ -5,17 +5,57 @@
   const emailOk = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').toLowerCase());
   const digits  = (s) => String(s || '').replace(/\D/g, '');
 
+  // Small API helper for consistent error handling
+  async function api(url, opts) {
+    const res = await fetch(url, opts);
+    let data = null;
+    try { data = await res.json(); }
+    catch {
+      const t = await res.text().catch(()=> '');
+      throw new Error(t?.slice(0, 400) || 'Server returned non-JSON');
+    }
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.message || `HTTP ${res.status}`);
+    }
+    return data;
+  }
+
   // ===== Campus radios =====
   async function loadCampuses() {
-    const wrap = $('#campusRadios');
+    const wrap  = $('#campusRadios');
+    const errEl = $('#campusError');
+    if (!wrap) return;
+
+    wrap.innerHTML = '<div class="note">Memuat daftar campus…</div>';
+    if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+
     try {
-      const r = await fetch('/api/salesforce-query?type=campus');
-      const j = await r.json();
-      const recs = j.records || [];
-      if (!recs.length) { wrap.innerHTML = '<div class="field-error">Data campus tidak tersedia.</div>'; return; }
+      // Primary
+      let j = await api('/api/register-options?type=campus');
+      let recs = (j.records || []).filter(r => r && r.Id && r.Name);
+
+      // One-time fallback to alias if empty
+      if (!recs.length) {
+        try {
+          const j2 = await api('/api/register-options?type=campuses');
+          recs = (j2.records || []).filter(r => r && r.Id && r.Name);
+          if (j2.errors) console.warn('Campus API warnings (fallback):', j2.errors);
+        } catch (e2) {
+          // keep original error flow below
+          console.warn('Fallback campuses call failed:', e2);
+        }
+      }
+
+      if (!recs.length) {
+        wrap.innerHTML = '<div class="field-error">Data campus tidak tersedia.</div>';
+        if (j.errors) console.warn('Campus API warnings:', j.errors);
+        return;
+      }
+
+      // Render radios
       wrap.innerHTML = '';
       recs.forEach((c, i) => {
-        const id = `camp_${c.Id}`;
+        const id = `camp_${String(c.Id).replace(/[^A-Za-z0-9]/g, '')}`;
         const label = document.createElement('label');
         label.className = 'radio-item';
         label.htmlFor = id;
@@ -28,7 +68,9 @@
         wrap.appendChild(label);
       });
     } catch (e) {
-      wrap.innerHTML = '<div class="field-error">Gagal memuat data Campus.</div>';
+      console.error('Campus load failed:', e);
+      wrap.innerHTML = '<div class="field-error">Data campus tidak tersedia.</div>';
+      if (errEl) { errEl.textContent = `Gagal memuat campus: ${e.message}`; errEl.style.display = 'block'; }
     }
   }
 
@@ -131,14 +173,11 @@
     try {
       showLoading();
 
-      const r = await fetch('/api/webtolead', {
+      const j = await api('/api/webtolead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const j = await r.json();
-
-      if (!r.ok || !j.success) throw new Error(j.message || 'Gagal mengirim data.');
 
       // Sukses
       Swal.close();
@@ -146,6 +185,9 @@
     } catch (e2) {
       Swal.close();
       showError(e2.message);
+      const msgBox2 = $('#contactMsg');
+      msgBox2.style.display = 'block';
+      msgBox2.textContent = e2.message || 'Gagal mengirim.';
     }
   }
 
