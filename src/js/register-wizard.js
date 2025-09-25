@@ -414,7 +414,7 @@
           msg.style.display='block';
           return;
         }
-        payload.masterSchoolId = schoolId;
+        payload.masterSchoolId = schoolId;  // backend will set Account.Master_School__c
         payload.schoolName = schoolName;
       }
 
@@ -442,6 +442,8 @@
     const p=S.pemohon||{}, r=S.reg||{}, s=S.sekolah||{};
 
     const npsnSuffix = s?.draftNpsn ? ` (NPSN: ${s.draftNpsn})` : '';
+    // NOTE: If Web_Stage__c == 6 and user reopens via deep link, the API now
+    // returns sekolah from Account.Master_School__c so this UI will reflect it.
     const sekolahLine = s?.mode==='manual'
       ? `${s.schoolName || '-'}${npsnSuffix}`
       : `${s.schoolName || '-'}`;
@@ -547,7 +549,7 @@
         }
       }
       if (j.sekolah) {
-        S.sekolah = mergeDefined(S.sekolah, j.sekolah); // preserve existing gradYear if API returned null
+        S.sekolah = mergeDefined(S.sekolah, j.sekolah);
       }
 
       const target = `/register.html?opp=${encodeURIComponent(oppId)}`;
