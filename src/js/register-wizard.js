@@ -59,6 +59,25 @@
     get sekolah(){ try{ return JSON.parse(localStorage.getItem(K('sekolah'))||'{}'); }catch{ return {}; } },
   };
 
+  // === Helpers to start a fresh registration (core fix) ===
+  function clearAllRegState() {
+    try {
+      ['opp','acc','pemohon','reg','sekolah'].forEach(k => localStorage.removeItem(K(k)));
+    } catch {}
+  }
+  function stripOppFromUrl() {
+    const url = new URL(location.href);
+    if (url.searchParams.has('opp')) {
+      url.searchParams.delete('opp');
+      history.replaceState(null, '', url.pathname + (url.search ? ('?'+url.searchParams.toString()) : '') || '/register.html');
+    }
+    // Also normalize to /register.html without stray sfid path segment
+    const raw = (location.pathname || '').replace(/^\/+|\/+$/g, '').split('/');
+    if (raw.length === 2 && raw[0].toLowerCase() === 'register') {
+      history.replaceState(null, '', '/register.html');
+    }
+  }
+
   // === UI helpers
   function showWizardHeader(show){
     $('#wizardHeader').style.display = show ? '' : 'none';
@@ -112,7 +131,12 @@
     setStep(startStep);
   }
 
-  $('#btnShowRegister')?.addEventListener('click', () => openWizardFromAuth(1));
+  // START NEW: purge old state and strip opp from URL (CORE FIX)
+  $('#btnShowRegister')?.addEventListener('click', () => {
+    clearAllRegState();
+    stripOppFromUrl();
+    openWizardFromAuth(1);
+  });
 
   $('#formLogin')?.addEventListener('submit', async (e)=>{
     e.preventDefault();
@@ -169,6 +193,11 @@
     if(pass!==pass2){ msg.textContent='Ulangi kata sandi tidak cocok.'; msg.style.display='block'; return; }
 
     try{
+      // CORE FIX: ensure absolutely clean state before creating a new registration
+      clearAllRegState();
+      S.opp = ''; S.acc = '';
+      stripOppFromUrl();
+
       showWizardHeader(true);
       showLoading('Mendaftarkan akun…');
 
@@ -343,17 +372,12 @@
       manualWrap.style.display = manual ? '' : 'none';
       autoWrap?.querySelector?.('.suggest-box') && (autoWrap.querySelector('.suggest-box').style.display = manual ? 'none' : '');
       if (manual) {
-        // manual mode on → prepare manual inputs
-        mName.disabled = false;
-        mName.setAttribute('required','');
+        mName.disabled = false; mName.setAttribute('required','');
         mNpsn.disabled = false;
-        input.dataset.chosenId = '';
-        input.dataset.chosenName = '';
+        input.dataset.chosenId = ''; input.dataset.chosenName = '';
         hidId.value = '';
       } else {
-        // manual mode off → disable manual controls so HTML5 validation won't block
-        mName.disabled = true;
-        mName.removeAttribute('required');
+        mName.disabled = true; mName.removeAttribute('required');
         mNpsn.disabled = true;
         mName.value=''; mNpsn.value='';
       }
@@ -363,7 +387,6 @@
 
     const onType = debounce(async () => {
       const term = (input.value || '').trim();
-      // typing clears previous choice so we don't send wrong Id
       hidId.value = '';
       input.dataset.chosenId = '';
       input.dataset.chosenName = '';
@@ -386,7 +409,6 @@
     input?.addEventListener('focus', onType);
     document.addEventListener('click', (e)=>{ if (!suggest.contains(e.target) && e.target !== input) suggest.style.display='none'; });
 
-    // persist both id & name when selecting a suggestion
     suggest?.addEventListener('click', (e)=>{
       const li = e.target.closest('.suggest-item'); if(!li) return;
       input.value = li.dataset.name || '';
@@ -398,12 +420,10 @@
 
     const form = $('#formStep4');
 
-    // --- MAIN SUBMIT HANDLER ---
     if (!form.dataset.boundSubmit) {
       form.addEventListener('submit', async (e)=>{
         e.preventDefault();
-        // hide suggestion list to avoid overlay capturing clicks
-        suggest.style.display = 'none';
+        suggest.style.display='none';
 
         const oppId=S.opp, accId=S.acc;
         const gradYear=$('#gradYearSelect').value;
@@ -436,7 +456,6 @@
           if (npsn) payload.draftNpsn = npsn;
           sMode='manual'; schoolName=name;
         } else {
-          // robust autocomplete branch
           let schoolId  = (hidId.value || '').trim();
           let nameTyped = (input.value || '').trim();
 
@@ -478,7 +497,6 @@
       form.dataset.boundSubmit = '1';
     }
 
-    // --- STEP 4 click/submit wiring ---
     if (!form.dataset.boundDirectBtn) {
       const primaryBtn = form.querySelector('.actions .submit-btn');
       if (primaryBtn) {
@@ -491,7 +509,6 @@
       form.dataset.boundDirectBtn = '1';
     }
 
-    // --- Safe click→submit shim (does not block native submits) ---
     if (!form.dataset.boundClickShim) {
       form.addEventListener('click', (ev) => {
         const backBtn = $('#btnBack4');
