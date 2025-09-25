@@ -342,7 +342,6 @@
     const applyToggle = () => {
       const manual = cbNotFound.checked;
       manualWrap.style.display = manual ? '' : 'none';
-      // optional chaining to avoid null error if .suggest-box isn't there yet
       autoWrap?.querySelector?.('.suggest-box') && (autoWrap.querySelector('.suggest-box').style.display = manual ? 'none' : '');
       if (manual) { hidId.value=''; input.value=''; suggest.style.display='none'; }
       else { mName.value=''; mNpsn.value=''; }
@@ -372,86 +371,105 @@
     document.addEventListener('click', (e)=>{ if (!suggest.contains(e.target) && e.target !== input) suggest.style.display='none'; });
     suggest?.addEventListener('click', (e)=>{ const li = e.target.closest('.suggest-item'); if(!li) return; input.value = li.dataset.name || ''; hidId.value = li.dataset.id || ''; suggest.style.display='none'; });
 
-    $('#formStep4').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const oppId=S.opp, accId=S.acc;
-      const gradYear=$('#gradYearSelect').value;
-      const photo=$('#photoFile').files[0];
-      const manual = cbNotFound.checked;
-      const msg=$('#msgStep4'); msg.style.display='none';
+    const form = $('#formStep4');
 
-      if(!gradYear){ msg.textContent='Pilih tahun lulus.'; msg.style.display='block'; return; }
-      if(!photo){ msg.textContent='Pilih pas foto.'; msg.style.display='block'; return; }
-      if(photo.size>1024*1024){
-        const mb = (photo.size/1024/1024).toFixed(2);
-        msg.textContent=`Ukuran pas foto maksimal 1MB (file Anda ${mb}MB).`;
-        msg.style.display='block'; return;
-      }
+    // --- MAIN SUBMIT HANDLER ---
+    if (!form.dataset.boundSubmit) {
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const oppId=S.opp, accId=S.acc;
+        const gradYear=$('#gradYearSelect').value;
+        const photo=$('#photoFile').files[0];
+        const manual = cbNotFound.checked;
+        const msg=$('#msgStep4'); msg.style.display='none';
 
-      // Build payload with smart fallback:
-      // - Auto when a valid Master School ID exists
-      // - Otherwise, if user typed something -> treat as MANUAL automatically
-      let payload = { opportunityId: oppId, accountId: accId, graduationYear: gradYear };
-      let sMode   = 'auto';
-      let schoolName = '';
-
-      if (manual) {
-        const name    = (mName.value || '').trim();
-        const npsnRaw = (mNpsn.value || '').trim();
-        const npsn    = digits(npsnRaw);
-
-        if (!name) {
-          msg.textContent = 'Isi nama sekolah manual.';
-          msg.style.display = 'block';
-          return;
-        }
-        if (npsnRaw && !/^\d{8}$/.test(npsn)) {
-          msg.textContent = 'Jika diisi, NPSN harus 8 digit angka.';
-          msg.style.display = 'block';
-          return;
+        if(!gradYear){ msg.textContent='Pilih tahun lulus.'; msg.style.display='block'; return; }
+        if(!photo){ msg.textContent='Pilih pas foto.'; msg.style.display='block'; return; }
+        if(photo.size>1024*1024){
+          const mb=(photo.size/1024/1024).toFixed(2);
+          msg.textContent=`Ukuran pas foto maksimal 1MB (file Anda ${mb}MB).`;
+          msg.style.display='block'; return;
         }
 
-        payload.draftSchool = name;
-        payload.schoolName  = name;
-        if (npsn) payload.draftNpsn = npsn;
-        sMode = 'manual';
-        schoolName = name;
-      } else {
-        const schoolId   = (hidId.value || '').trim();
-        const nameTyped  = (input.value || '').trim();
-        const idOk       = /^[a-zA-Z0-9]{15,18}$/.test(schoolId);
+        let payload = { opportunityId: oppId, accountId: accId, graduationYear: gradYear };
+        let sMode   = 'auto';
+        let schoolName = '';
 
-        if (idOk) {
-          payload.masterSchoolId = schoolId;
-          payload.schoolName = nameTyped;
-          sMode = 'auto';
-          schoolName = nameTyped;
-        } else if (nameTyped.length >= 2) {
-          // === Auto-fallback to MANUAL if user typed a name but didn't select ===
-          payload.draftSchool = nameTyped;
-          payload.schoolName  = nameTyped;
-          sMode = 'manual';
-          schoolName = nameTyped;
+        if (manual) {
+          const name    = (mName.value || '').trim();
+          const npsnRaw = (mNpsn.value || '').trim();
+          const npsn    = digits(npsnRaw);
+
+          if (!name) { msg.textContent='Isi nama sekolah manual.'; msg.style.display='block'; return; }
+          if (npsnRaw && !/^\d{8}$/.test(npsn)) { msg.textContent='Jika diisi, NPSN harus 8 digit angka.'; msg.style.display='block'; return; }
+
+          payload.draftSchool = name;
+          payload.schoolName  = name;
+          if (npsn) payload.draftNpsn = npsn;
+          sMode='manual'; schoolName=name;
         } else {
-          msg.textContent = 'Pilih sekolah dari daftar autocomplete atau centang "Sekolah tidak ditemukan" untuk input manual.';
-          msg.style.display='block';
-          input?.focus();
-          return;
-        }
-      }
+          const schoolId  = (hidId.value || '').trim();
+          const nameTyped = (input.value || '').trim();
+          const idOk      = /^[a-zA-Z0-9]{15,18}$/.test(schoolId);
 
-      try{
-        showLoading('Menyimpan data sekolah & pas foto…');
-        await api('/api/register-save-educ',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-        const payload2={ opportunityId:oppId, accountId:accId, filename:photo.name, mime:photo.type||'image/jpeg', data:await fileToBase64(photo) };
-        await api('/api/register-upload-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload2) });
-        S.sekolah={ mode: sMode, schoolName, draftNpsn: payload.draftNpsn||null, gradYear, photoName:photo.name };
-        closeLoading(); toastOk('Data sekolah & pas foto tersimpan.');
-        setStep(5);
-        updateStage(5);
-        buildReview();
-      }catch(err){ closeLoading(); showError(err.message); }
-    });
+          if (idOk) {
+            payload.masterSchoolId = schoolId;
+            payload.schoolName = nameTyped;
+            sMode='auto'; schoolName=nameTyped;
+          } else if (nameTyped.length >= 2) {
+            // Auto-fallback to manual when user typed but didn't pick
+            payload.draftSchool = nameTyped;
+            payload.schoolName  = nameTyped;
+            sMode='manual'; schoolName=nameTyped;
+          } else {
+            msg.textContent='Pilih sekolah dari daftar autocomplete atau centang "Sekolah tidak ditemukan" untuk input manual.';
+            msg.style.display='block';
+            input?.focus();
+            return;
+          }
+        }
+
+        try{
+          showLoading('Menyimpan data sekolah & pas foto…');
+          await api('/api/register-save-educ',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+          const payload2={ opportunityId:oppId, accountId:accId, filename:photo.name, mime:photo.type||'image/jpeg', data:await fileToBase64(photo) };
+          await api('/api/register-upload-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload2) });
+          S.sekolah={ mode: sMode, schoolName, draftNpsn: payload.draftNpsn||null, gradYear, photoName:photo.name };
+          closeLoading(); toastOk('Data sekolah & pas foto tersimpan.');
+          setStep(5);
+          updateStage(5);
+          buildReview();
+        }catch(err){ closeLoading(); showError(err.message); }
+      });
+      form.dataset.boundSubmit = '1';
+    }
+
+    // --- CLICK→SUBMIT SHIM (handles buttons that are not type=submit) ---
+    if (!form.dataset.boundClickShim) {
+      form.addEventListener('click', (ev) => {
+        const backBtn = $('#btnBack4');
+        const isBack = backBtn && (ev.target === backBtn || backBtn.contains(ev.target));
+        if (isBack) return;
+
+        const btn = ev.target.closest('button, a, input[type="submit"]');
+        if (!btn) return;
+
+        // Heuristic: treat primary-looking controls as submit
+        const looksPrimary = btn.matches('input[type="submit"], button[type="submit"], .btn-primary');
+        if (!looksPrimary) return;
+
+        // If it's not a real submit button, submit programmatically.
+        const isRealSubmit = (btn.tagName === 'BUTTON' && (btn.type === 'submit' || btn.getAttribute('type') === null))
+                          || (btn.tagName === 'INPUT'  && btn.type === 'submit');
+
+        if (!isRealSubmit) {
+          ev.preventDefault();
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+      });
+      form.dataset.boundClickShim = '1';
+    }
   }
 
   // =========================
@@ -567,7 +585,7 @@
         }
       }
       if (j.sekolah) {
-        S.sekolah = mergeDefined(S.sekolah, j.sekolah); // preserve existing gradYear if API returned null
+        S.sekolah = mergeDefined(S.sekolah, j.sekolah);
       }
 
       const target = `/register.html?opp=${encodeURIComponent(oppId)}`;
