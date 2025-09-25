@@ -339,26 +339,31 @@
     const mName      = $('#schoolManualName');
     const mNpsn      = $('#schoolManualNpsn');
 
-    const applyToggle = () => {
-      const manual = cbNotFound.checked;
+    const setManualMode = (manual) => {
       manualWrap.style.display = manual ? '' : 'none';
       autoWrap?.querySelector?.('.suggest-box') && (autoWrap.querySelector('.suggest-box').style.display = manual ? 'none' : '');
       if (manual) {
-        hidId.value = '';
-        input.value = '';
+        // manual mode on → prepare manual inputs
+        mName.disabled = false;
+        mName.setAttribute('required','');
+        mNpsn.disabled = false;
         input.dataset.chosenId = '';
         input.dataset.chosenName = '';
-        suggest.style.display='none';
+        hidId.value = '';
       } else {
+        // manual mode off → disable manual controls so HTML5 validation won't block
+        mName.disabled = true;
+        mName.removeAttribute('required');
+        mNpsn.disabled = true;
         mName.value=''; mNpsn.value='';
       }
     };
-    cbNotFound?.addEventListener('change', applyToggle);
-    applyToggle();
+    cbNotFound?.addEventListener('change', ()=> setManualMode(cbNotFound.checked));
+    setManualMode(cbNotFound.checked);
 
     const onType = debounce(async () => {
       const term = (input.value || '').trim();
-      // clear previous selection when user types
+      // typing clears previous choice so we don't send wrong Id
       hidId.value = '';
       input.dataset.chosenId = '';
       input.dataset.chosenName = '';
@@ -381,7 +386,7 @@
     input?.addEventListener('focus', onType);
     document.addEventListener('click', (e)=>{ if (!suggest.contains(e.target) && e.target !== input) suggest.style.display='none'; });
 
-    // when a suggestion is clicked, persist both id & name
+    // persist both id & name when selecting a suggestion
     suggest?.addEventListener('click', (e)=>{
       const li = e.target.closest('.suggest-item'); if(!li) return;
       input.value = li.dataset.name || '';
@@ -397,6 +402,9 @@
     if (!form.dataset.boundSubmit) {
       form.addEventListener('submit', async (e)=>{
         e.preventDefault();
+        // hide suggestion list to avoid overlay capturing clicks
+        suggest.style.display = 'none';
+
         const oppId=S.opp, accId=S.acc;
         const gradYear=$('#gradYearSelect').value;
         const photo=$('#photoFile').files[0];
@@ -428,24 +436,22 @@
           if (npsn) payload.draftNpsn = npsn;
           sMode='manual'; schoolName=name;
         } else {
-          // === AUTOCOMPLETE mode with robust fallback ===
+          // robust autocomplete branch
           let schoolId  = (hidId.value || '').trim();
           let nameTyped = (input.value || '').trim();
 
-          // if hidden id got cleared, fall back to last chosen suggestion
           if (!schoolId && input.dataset.chosenId) {
             schoolId  = input.dataset.chosenId;
             nameTyped = input.dataset.chosenName || nameTyped;
           }
 
-          const idOk = /^[a-zA-Z0-9]{15,18}$/.test(schoolId);
+          const idOk = /^[A-Za-z0-9]{15,18}$/.test(schoolId);
 
           if (idOk) {
             payload.masterSchoolId = schoolId;
             payload.schoolName = nameTyped;
             sMode='auto'; schoolName=nameTyped;
           } else if (nameTyped.length >= 2) {
-            // Auto-fallback to manual when user typed but didn't pick
             payload.draftSchool = nameTyped;
             payload.schoolName  = nameTyped;
             sMode='manual'; schoolName=nameTyped;
