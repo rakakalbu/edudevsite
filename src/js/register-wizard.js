@@ -343,15 +343,26 @@
       const manual = cbNotFound.checked;
       manualWrap.style.display = manual ? '' : 'none';
       autoWrap?.querySelector?.('.suggest-box') && (autoWrap.querySelector('.suggest-box').style.display = manual ? 'none' : '');
-      if (manual) { hidId.value=''; input.value=''; suggest.style.display='none'; }
-      else { mName.value=''; mNpsn.value=''; }
+      if (manual) {
+        hidId.value = '';
+        input.value = '';
+        input.dataset.chosenId = '';
+        input.dataset.chosenName = '';
+        suggest.style.display='none';
+      } else {
+        mName.value=''; mNpsn.value='';
+      }
     };
     cbNotFound?.addEventListener('change', applyToggle);
     applyToggle();
 
     const onType = debounce(async () => {
       const term = (input.value || '').trim();
+      // clear previous selection when user types
       hidId.value = '';
+      input.dataset.chosenId = '';
+      input.dataset.chosenName = '';
+
       if (term.length < 2){ suggest.innerHTML=''; suggest.style.display='none'; return; }
       try{
         const j = await api(`/api/register-options?type=sekolah&term=${encodeURIComponent(term)}`);
@@ -369,7 +380,16 @@
     input?.addEventListener('input', onType);
     input?.addEventListener('focus', onType);
     document.addEventListener('click', (e)=>{ if (!suggest.contains(e.target) && e.target !== input) suggest.style.display='none'; });
-    suggest?.addEventListener('click', (e)=>{ const li = e.target.closest('.suggest-item'); if(!li) return; input.value = li.dataset.name || ''; hidId.value = li.dataset.id || ''; suggest.style.display='none'; });
+
+    // when a suggestion is clicked, persist both id & name
+    suggest?.addEventListener('click', (e)=>{
+      const li = e.target.closest('.suggest-item'); if(!li) return;
+      input.value = li.dataset.name || '';
+      hidId.value = li.dataset.id || '';
+      input.dataset.chosenId = li.dataset.id || '';
+      input.dataset.chosenName = li.dataset.name || '';
+      suggest.style.display='none';
+    });
 
     const form = $('#formStep4');
 
@@ -408,9 +428,17 @@
           if (npsn) payload.draftNpsn = npsn;
           sMode='manual'; schoolName=name;
         } else {
-          const schoolId  = (hidId.value || '').trim();
-          const nameTyped = (input.value || '').trim();
-          const idOk      = /^[a-zA-Z0-9]{15,18}$/.test(schoolId);
+          // === AUTOCOMPLETE mode with robust fallback ===
+          let schoolId  = (hidId.value || '').trim();
+          let nameTyped = (input.value || '').trim();
+
+          // if hidden id got cleared, fall back to last chosen suggestion
+          if (!schoolId && input.dataset.chosenId) {
+            schoolId  = input.dataset.chosenId;
+            nameTyped = input.dataset.chosenName || nameTyped;
+          }
+
+          const idOk = /^[a-zA-Z0-9]{15,18}$/.test(schoolId);
 
           if (idOk) {
             payload.masterSchoolId = schoolId;
@@ -449,7 +477,6 @@
       const primaryBtn = form.querySelector('.actions .submit-btn');
       if (primaryBtn) {
         primaryBtn.addEventListener('click', (ev) => {
-          // Always force a real submit (prevents any overlay/handler from swallowing the click)
           ev.preventDefault();
           if (typeof form.requestSubmit === 'function') form.requestSubmit();
           else form.dispatchEvent(new Event('submit', { cancelable:true, bubbles:true }));
@@ -464,10 +491,9 @@
         const backBtn = $('#btnBack4');
         if (backBtn && (ev.target === backBtn || backBtn.contains(ev.target))) return;
 
-        const btn = ev.target.closest('a');
-        if (!btn) return;
-        // If someone styles an <a> like the primary button, treat it as submit
-        const looksSubmit = btn.classList.contains('submit-btn') || btn.classList.contains('btn-primary');
+        const a = ev.target.closest('a');
+        if (!a) return;
+        const looksSubmit = a.classList.contains('submit-btn') || a.classList.contains('btn-primary');
         if (looksSubmit) {
           ev.preventDefault();
           if (typeof form.requestSubmit === 'function') form.requestSubmit();
