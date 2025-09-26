@@ -2,10 +2,13 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/promos",  "destination": "/promos.html?status=active&page=1", "permanent": false },
+    { "source": "/promos/", "destination": "/promos.html?status=active&page=1", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/register", "destination": "/register.html" },
-    { "source": "/promos", "destination": "/promos.html" },
     { "source": "/:oppId([A-Za-z0-9]{15,18})", "destination": "/register.html" }
   ]
 }
