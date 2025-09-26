@@ -5,6 +5,7 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/register", "destination": "/register.html" },
+    { "source": "/promos", "destination": "/promos.html" },
     { "source": "/:oppId([A-Za-z0-9]{15,18})", "destination": "/register.html" }
   ]
 }
