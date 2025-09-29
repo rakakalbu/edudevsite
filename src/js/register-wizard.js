@@ -4,7 +4,7 @@
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-  // == Utils
+  // === Utils
   const emailOk = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').toLowerCase());
   const digits  = (s) => String(s || '').replace(/\D/g, '');
   const normalizePhone = (raw) => {
@@ -544,7 +544,6 @@
       </div>
       <div class="review-section">
         <h4>Preferensi Studi</h4>
-        <div><b>Study Program:</b> ${x.StudyProgramName||'-'}</div>
         <div><b>BSP:</b> ${r?.bspName||'-'}</div>
         <div><b>Harga Form:</b> ${r?.bookingPrice!=null?('Rp '+Number(r.bookingPrice).toLocaleString('id-ID')):'-'}</div>
       </div>
