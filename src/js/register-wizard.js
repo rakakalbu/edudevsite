@@ -544,6 +544,7 @@
       </div>
       <div class="review-section">
         <h4>Preferensi Studi</h4>
+        <div><b>Study Program:</b> ${r?.StudyProgramName||'-'}</div>
         <div><b>BSP:</b> ${r?.bspName||'-'}</div>
         <div><b>Harga Form:</b> ${r?.bookingPrice!=null?('Rp '+Number(r.bookingPrice).toLocaleString('id-ID')):'-'}</div>
       </div>
