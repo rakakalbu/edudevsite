@@ -4,7 +4,7 @@
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-  // === Utils
+  // == Utils
   const emailOk = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').toLowerCase());
   const digits  = (s) => String(s || '').replace(/\D/g, '');
   const normalizePhone = (raw) => {
