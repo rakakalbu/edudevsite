@@ -304,6 +304,7 @@
     const campusId=$('input[name="campus"]:checked')?.value||'';
     const intakeId=$('#intakeSelect').value;
     const programId=$('#programSelect').value;
+    const programName = $('#programSelect')?.selectedOptions?.[0]?.textContent?.trim() || '';
     const msg=$('#msgStep2'); msg.style.display='none';
     if(!campusId||!intakeId||!programId){ msg.textContent='Pilih campus, tahun ajaran, dan program.'; msg.style.display='block'; return; }
     try{
@@ -316,7 +317,7 @@
         body: JSON.stringify({ action:'saveReg', opportunityId:S.opp, campusId, intakeId, studyProgramId:programId, bspId })
       });
 
-      S.reg={ campusId,intakeId,programId,bspId,bspName,bookingPrice };
+      S.reg={ campusId,intakeId,programId,bspId,bspName,bookingPrice, studyProgramName: programName };
       $('#vaPrice') && ($('#vaPrice').textContent = rupiah(bookingPrice));
       closeLoading(); toastOk('Preferensi studi tersimpan. Lanjut ke pembayaran.');
       setStep(3);
@@ -544,6 +545,7 @@
       </div>
       <div class="review-section">
         <h4>Preferensi Studi</h4>
+        <div><b>Study Program:</b> ${r?.studyProgramName || '-'}</div>
         <div><b>BSP:</b> ${r?.bspName||'-'}</div>
         <div><b>Harga Form:</b> ${r?.bookingPrice!=null?('Rp '+Number(r.bookingPrice).toLocaleString('id-ID')):'-'}</div>
       </div>
