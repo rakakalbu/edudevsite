@@ -21,7 +21,7 @@
   const featPrev  = $("#featPrev");
   const featNext  = $("#featNext");
 
-  // ===== (Opsional) Auto-compact jika viewport pendek =====
+  // ===== viewport compact
   function applyCompactByViewport(){
     if (!featWrap) return;
     const shouldCompact = (window.innerHeight < 750);
@@ -29,30 +29,28 @@
   }
   applyCompactByViewport();
   window.addEventListener('resize', () => {
-    // jangan override kalau user sudah pasang is-compact manual
     if (featWrap && !featWrap.dataset.locked) applyCompactByViewport();
   });
 
-  // ===== Konstanta gambar =====
+  // ===== images
   const IMG_PLACEHOLDER = 'https://placehold.co/640x360?text=Promo';
   const IMG_FALLBACK    = 'https://placehold.co/640x360?text=Promo';
 
-  // ===== Cache URL public link per Campaign =====
   const imageUrlCache = new Map();
 
-  // ===== State =====
-  let state = { q:"", status:"active", category:"all", page:1, limit:12, total:0 };
+  // ===== State (default to ALL so data appears)
+  let state = { q:"", status:"all", category:"all", page:1, limit:12, total:0 };
 
   // Hydrate from URL
   try {
     const usp = new URLSearchParams(location.search);
     if (usp.has('q')) state.q = qEl.value = usp.get('q') || "";
-    if (usp.has('status')) state.status = statusEl.value = usp.get('status') || "active";
+    if (usp.has('status')) state.status = statusEl.value = usp.get('status') || "all";
+    else statusEl && (statusEl.value = "all");
     if (usp.has('category')) state.category = categoryEl.value = usp.get('category') || "all";
     if (usp.has('page')) state.page = Math.max(1, parseInt(usp.get('page')||'1',10));
   } catch {}
 
-  // ===== Utils =====
   const rupiah  = v => v==null ? null : new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(v);
   const fmtDate = d => d ? new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : null;
 
@@ -71,7 +69,6 @@
       .catch(() => Swal.fire({icon:'error', title:'Gagal menyalin'}));
   }
 
-  // ===== Validation =====
   function validateEmailStrict(email) {
     const e = String(email || '').trim();
     const basic = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
@@ -83,19 +80,12 @@
     const tld = domain.split('.').pop();
     if (!tld || tld.length < 2) return 'TLD domain terlalu pendek.';
     const disposable = new Set(['mailinator.com','yopmail.com','10minutemail.com','guerrillamail.com','temp-mail.org','tempmail.com','trashmail.com','sharklasers.com']);
-    if (disposable.has(domain.toLowerCase())) return 'Gunakan email aktif (bukan email sementara/disposable).';
+    if (disposable.has(domain.toLowerCase())) return 'Gunakan email aktif.';
     return null;
   }
   function setFieldState(input, msgEl, msg){
-    if (msg){
-      input.classList.add('error');
-      msgEl.textContent = msg;
-      msgEl.hidden = false;
-    }else{
-      input.classList.remove('error');
-      msgEl.hidden = true;
-      msgEl.textContent = '';
-    }
+    if (msg){ input.classList.add('error'); msgEl.textContent = msg; msgEl.hidden = false; }
+    else { input.classList.remove('error'); msgEl.hidden = true; msgEl.textContent = ''; }
   }
   function validateName(value, label){
     const v = String(value||'').trim();
@@ -105,70 +95,52 @@
   }
   function validatePhoneLocal(value){
     const s = String(value||'').replace(/\D/g,'');
-    if (!s) return null; // opsional
+    if (!s) return null;
     if (s.startsWith('0')) return 'Tulis tanpa 0 di depan (gunakan format 812…).';
     if (s.length < 9 || s.length > 13) return 'No. HP 9–13 digit.';
     return null;
   }
 
-  // ======= Image resolver (Field URL -> fallback API) =======
   async function fetchPromoImageUrl(campaignId){
     if (imageUrlCache.has(campaignId)) return imageUrlCache.get(campaignId);
     try {
       const url = new URL('/api/promo-image', location.origin);
       url.searchParams.set('campaignId', campaignId);
       url.searchParams.set('format', 'url');
-
       const r = await fetch(url.toString(), { headers:{'Accept':'application/json'}, cache:'no-store' });
       const j = await r.json();
       if (!r.ok || !j.success || !j.url) throw new Error(j.message || 'No image URL');
       imageUrlCache.set(campaignId, j.url);
       return j.url;
-    } catch (e) {
-      imageUrlCache.set(campaignId, null); // cache negatif
+    } catch {
+      imageUrlCache.set(campaignId, null);
       return null;
     }
   }
-  function applyImgFallback(img){
-    img.onerror = null;
-    img.src = IMG_FALLBACK;
-  }
+  function applyImgFallback(img){ img.onerror = null; img.src = IMG_FALLBACK; }
   async function resolveImageWithFallback(holder){
     const id  = holder.dataset.campaign;
     const img = holder.querySelector('img');
-    if (!id || !img) return;
-    if (img.dataset.resolved === '1') return;
-
+    if (!id || !img || img.dataset.resolved === '1') return;
     const fieldUrl = img.dataset.sfPublic || img.getAttribute('data-sf-public') || null;
-
     if (fieldUrl) {
-      let triedFallback = false;
+      let tried = false;
       img.onerror = async () => {
-        if (triedFallback) { applyImgFallback(img); return; }
-        triedFallback = true;
+        if (tried) { applyImgFallback(img); return; }
+        tried = true;
         const url2 = await fetchPromoImageUrl(id);
         img.onerror = () => applyImgFallback(img);
         img.src = url2 || IMG_FALLBACK;
       };
-      img.src = fieldUrl;
-      img.dataset.resolved = '1';
-      return;
+      img.src = fieldUrl; img.dataset.resolved = '1'; return;
     }
-
     const url = await fetchPromoImageUrl(id);
     img.onerror = () => applyImgFallback(img);
-    img.src = url || IMG_FALLBACK;
-    img.dataset.resolved = '1';
+    img.src = url || IMG_FALLBACK; img.dataset.resolved = '1';
   }
   const ioImg = new IntersectionObserver(entries => {
-    entries.forEach(en => {
-      if (en.isIntersecting) {
-        resolveImageWithFallback(en.target);
-        ioImg.unobserve(en.target);
-      }
-    });
+    entries.forEach(en => { if (en.isIntersecting) { resolveImageWithFallback(en.target); ioImg.unobserve(en.target); }});
   }, { root: null, rootMargin: '200px', threshold: 0.01 });
-
   function wireImageResolver(scope=document){
     scope.querySelectorAll('.card[data-campaign], .slide[data-campaign]').forEach(el => {
       const img = el.querySelector('img');
@@ -177,7 +149,7 @@
     });
   }
 
-  // ===== Featured Carousel =====
+  // ===== Featured
   let slides = [];
   let current = 0;
   let autoTimer = null;
@@ -188,11 +160,9 @@
     const dateStr = [fmtDate(rec.startDate), fmtDate(rec.endDate)].filter(Boolean).join(' — ');
     const priceStr = rec.price!=null ? rupiah(rec.price) : '';
     const discountStr = rec.discountPercent!=null ? `${rec.discountPercent}% OFF` : '';
-
     return `
     <div class="slide" data-campaign="${rec.id}" role="option" aria-label="${rec.name}" tabindex="0">
-      <img src="${IMG_PLACEHOLDER}" alt="${rec.name}" loading="lazy" decoding="async" width="1280" height="720"
-           data-sf-public="${sfUrl}">
+      <img src="${IMG_PLACEHOLDER}" alt="${rec.name}" loading="lazy" decoding="async" width="1280" height="720" data-sf-public="${sfUrl}">
       <div class="badges-left">
         ${discountStr ? `<span class="badge badge-sale">${discountStr}</span>` : ''}
         ${rec.category ? `<span class="badge badge-cat">${rec.category}</span>` : ''}
@@ -205,9 +175,7 @@
         <div class="meta">${[dateStr, rec.category].filter(Boolean).join(' • ')}</div>
         <div class="meta">${[priceStr].filter(Boolean).join(' · ')}</div>
         <div class="actions">
-          <button class="btn btn-primary" type="button" data-register data-campaign="${rec.id}" data-name="${rec.name}">
-            Daftar Promo
-          </button>
+          <button class="btn btn-primary" type="button" data-register data-campaign="${rec.id}" data-name="${rec.name}">Daftar Promo</button>
         </div>
       </div>
     </div>`;
@@ -215,36 +183,21 @@
 
   async function loadFeatured(){
     try{
-      console.log('load featured');
-      const r = await fetch(`/api/campaigns?status=active&page=1&limit=12`, { cache:'no-store' });
+      const r = await fetch(`/api/campaigns?status=all&page=1&limit=12`, { cache:'no-store' }); // use ALL so we have slides
       const j = await r.json();
-      console.log('fetch campaign status active', j);
-      if (!r.ok) {
-        console.log('fetch error', j.message);
-        throw new Error(j.message || 'Gagal ambil featured');
-      };
-      
+      if (!r.ok) throw new Error(j.message || 'Gagal ambil featured');
       const recs = (j.records || []).slice(0, 8);
       if (!recs.length) { featWrap.hidden = true; return; }
-      console.log('recs', recs);
-
       slides = recs;
       featTrack.innerHTML = recs.map(buildSlide).join('');
       featDots.innerHTML  = recs.map((_,i)=>`<button class="dot ${i===0?'active':''}" data-i="${i}" aria-label="Slide ${i+1}"></button>`).join('');
       featWrap.hidden = false;
-
       wireImageResolver(featTrack);
       recs.forEach(it => observeQuotaForId(it.id));
-
       featPrev.onclick = ()=> go(current-1);
       featNext.onclick = ()=> go(current+1);
       featDots.onclick = (e)=>{ const t = e.target.closest('.dot'); if(!t) return; go(Number(t.dataset.i)); };
-
-      featTrack.addEventListener('keydown', (e)=>{
-        if (e.key === 'ArrowLeft') go(current-1);
-        if (e.key === 'ArrowRight') go(current+1);
-      });
-
+      featTrack.addEventListener('keydown', (e)=>{ if (e.key === 'ArrowLeft') go(current-1); if (e.key === 'ArrowRight') go(current+1); });
       startAuto();
       featTrack.addEventListener('mouseenter', stopAuto);
       featTrack.addEventListener('mouseleave', startAuto);
@@ -277,7 +230,7 @@
     window.addEventListener('touchend', onUp);
   }
 
-  // ===== Grid list =====
+  // ===== Grid list
   function priceBlock(price, discountPercent){
     if (price == null) return '';
     if (discountPercent == null) return `<span class="price price-final">${rupiah(price)}</span>`;
@@ -288,19 +241,16 @@
       <span class="status">Hemat ${rupiah(hemat)}</span>
     `;
   }
-
   function card(record){
     const { id, name, description, startDate, endDate, status, category, price, discountPercent } = record;
     const dateStr   = [fmtDate(startDate), fmtDate(endDate)].filter(Boolean).join(' — ');
     const plainDesc = (description || '').replace(/<[^>]+>/g,'');
     const desc      = plainDesc.length > 160 ? (plainDesc.slice(0,160) + '…') : plainDesc;
     const sfUrl     = record.promoImageUrl || record.imageUrl || '';
-
     return `
     <article class="card" data-campaign="${id}">
       <div class="thumb">
-        <img src="${IMG_PLACEHOLDER}" alt="${name}" loading="lazy" decoding="async" width="640" height="360"
-             data-sf-public="${sfUrl}">
+        <img src="${IMG_PLACEHOLDER}" alt="${name}" loading="lazy" decoding="async" width="640" height="360" data-sf-public="${sfUrl}">
         <div class="badges-left">
           ${discountPercent!=null ? `<span class="badge badge-sale">${discountPercent}% OFF</span>` : ''}
           ${category ? `<span class="badge badge-cat">${category}</span>` : ''}
@@ -320,19 +270,15 @@
               ? `<span class="status ${'st-'+status.toLowerCase().replace(/\s+/g,'-')}">${status}</span>` : ''}
           </div>
           <div class="actions">
-            <button class="btn btn-primary" type="button" data-register data-campaign="${id}" data-name="${name}">
-              Daftar Promo
-            </button>
+            <button class="btn btn-primary" type="button" data-register data-campaign="${id}" data-name="${name}">Daftar Promo</button>
           </div>
         </div>
       </div>
     </article>`;
   }
 
-  // Abortable list fetch
   let listAbort;
   async function load(){
-    console.log('test load');
     setUrlFromState();
     msgEl.textContent = "Memuat promo…";
     grid.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
@@ -349,11 +295,7 @@
       listAbort?.abort(); listAbort = new AbortController();
       const r = await fetch(`/api/campaigns?${params}`, { signal:listAbort.signal, cache:'no-store' });
       const j = await r.json();
-      console.log('test fetch campaign', j);
-      if (!r.ok) {
-        console.log(j.message);
-        throw new Error(j.message || "Gagal mengambil data");
-      }
+      if (!r.ok) throw new Error(j.message || "Gagal mengambil data");
 
       state.total = j.total || 0;
       const items = j.records || [];
@@ -365,12 +307,11 @@
              </div>
            </div>`;
 
-      console.log('items', items);
       if (!items.length) {
         const btnReset = $("#resetFilters");
         if (btnReset) btnReset.onclick = () => {
-          qEl.value=''; statusEl.value='active'; categoryEl.value='all';
-          state = { q:"", status:"active", category:"all", page:1, limit:12, total:0 };
+          qEl.value=''; statusEl.value='all'; categoryEl.value='all';
+          state = { q:"", status:"all", category:"all", page:1, limit:12, total:0 };
           load();
         };
       }
@@ -381,11 +322,8 @@
       nextBtn.disabled = state.page >= maxPage || !j.hasMore;
 
       msgEl.textContent = "";
-
-      // kuota & gambar dinamis
       items.forEach(it => observeQuotaForId(it.id));
       wireImageResolver(grid);
-      console.log('finish load');
 
     } catch (e) {
       if (e.name === 'AbortError') return;
@@ -395,7 +333,6 @@
     }
   }
 
-  // IntersectionObserver for quota
   const visibleIds = new Set();
   const io = new IntersectionObserver(entries=>{
     entries.forEach(e=>{
@@ -417,7 +354,6 @@
 
   setInterval(()=>{ visibleIds.forEach(id => updateQuota(id)); }, 30000);
 
-  // === Kuota ===
   async function updateQuota(campaignId){
     const badge = document.querySelector(`[data-quota-for="${campaignId}"]`);
     const holder= document.querySelector(`.card[data-campaign="${campaignId}"]`) || document.querySelector(`.slide[data-campaign="${campaignId}"]`);
@@ -468,11 +404,10 @@
   nextBtn.addEventListener('click',     ()=>{ state.page++; load(); });
   shareBtn.addEventListener('click',    copyCurrentUrl);
 
-  // modal daftar promo
+  // modal register + validation
   let lastFocus = null;
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-register]');
-    if (!btn) return;
+    const btn = e.target.closest('[data-register]'); if (!btn) return;
     lastFocus = btn;
     openRegisterModal({ campaignId: btn.dataset.campaign, campaignName: btn.dataset.name });
   });
@@ -486,7 +421,6 @@
     $('#interest_firstName').focus();
     stopAuto();
   }
-
   $('#interest_close').addEventListener('click', closeModal);
   function closeModal(){
     const m = $('#interestModal');
@@ -495,16 +429,9 @@
     if (lastFocus) lastFocus.focus();
     startAuto();
   }
+  document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape' && $('#interestModal').classList.contains('show')) closeModal(); });
+  $('#interest_phone').addEventListener('input', (e)=>{ e.target.value = e.target.value.replace(/\D/g,''); });
 
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Escape' && $('#interestModal').classList.contains('show')) closeModal();
-  });
-
-  $('#interest_phone').addEventListener('input', (e)=>{
-    e.target.value = e.target.value.replace(/\D/g,'');
-  });
-
-  // realtime validation binding
   const firstNameEl = document.getElementById('interest_firstName');
   const lastNameEl  = document.getElementById('interest_lastName');
   const emailEl     = document.getElementById('interest_email');
@@ -520,26 +447,22 @@
     const e2 = validateName(lastNameEl.value ,'Nama belakang');
     const e3 = validateEmailStrict(emailEl.value);
     const e4 = validatePhoneLocal(phoneEl.value);
-
     setFieldState(firstNameEl, fnMsg, e1);
     setFieldState(lastNameEl , lnMsg, e2);
     setFieldState(emailEl    , emMsg, e3);
     setFieldState(phoneEl    , phMsg, e4);
-
     const ok = !e1 && !e2 && !e3 && !e4;
     submitBtn.disabled = !ok;
     return ok;
   }
   [firstNameEl, lastNameEl, emailEl, phoneEl].forEach(el=> el.addEventListener('input', validateForm));
 
-  // submit
   document.getElementById('interest_form').addEventListener('submit', async (ev)=>{
     ev.preventDefault();
     if (!validateForm()){
       Swal.fire({icon:'warning', title:'Lengkapi data', text:'Periksa kembali kolom yang bertanda merah.'});
       return;
     }
-
     const firstName = $('#interest_firstName').value.trim();
     const lastName  = $('#interest_lastName').value.trim();
     const email     = $('#interest_email').value.trim();
@@ -547,34 +470,21 @@
     const phoneRaw  = $('#interest_phone').value.trim();
     const campaignId= $('#interest_campaignId').value;
 
-    let s = phoneRaw.replace(/\D/g,'');
-    if (s.startsWith('0')) s = s.slice(1);
+    let s = phoneRaw.replace(/\D/g,''); if (s.startsWith('0')) s = s.slice(1);
     const phone = s ? `+62${s}` : null;
 
-    const payload = {
-      firstName, lastName, email, phone, company, campaignId,
-      leadSource:'Promo Page', leadStatus:'New', campaignMemberStatus:'Responded'
-    };
+    const payload = { firstName, lastName, email, phone, company, campaignId,
+      leadSource:'Promo Page', leadStatus:'New', campaignMemberStatus:'Responded' };
 
     try {
-      submitBtn.disabled = true;
-      submitBtn.classList.add('is-loading');
-      submitBtn.textContent = 'Mengirim…';
-
-      const r = await fetch('/api/lead-interest', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
+      submitBtn.disabled = true; submitBtn.classList.add('is-loading'); submitBtn.textContent = 'Mengirim…';
+      const r = await fetch('/api/lead-interest', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       const ct = r.headers.get('content-type') || '';
       const data = ct.includes('application/json') ? await r.json() : { message: await r.text() };
       if (!r.ok) throw new Error(data.message || 'Gagal menyimpan pendaftaran');
 
-      if (data.alreadyRegistered) {
-        await Swal.fire({icon:'info', title:'Anda sudah terdaftar', text:'Data Anda sudah tercatat pada promo ini.'});
-      } else {
-        await Swal.fire({icon:'success', title:'Pendaftaran berhasil', text:'Terima kasih! Pendaftaran promo Anda diterima.'});
-      }
+      if (data.alreadyRegistered) await Swal.fire({icon:'info', title:'Anda sudah terdaftar', text:'Data Anda sudah tercatat pada promo ini.'});
+      else await Swal.fire({icon:'success', title:'Pendaftaran berhasil', text:'Terima kasih! Pendaftaran promo Anda diterima.'});
 
       updateQuota(campaignId);
       closeModal();
@@ -585,13 +495,10 @@
       console.error(e);
       Swal.fire({icon:'error', title:'Gagal', text: e.message || 'Terjadi kesalahan. Coba lagi.'});
     } finally {
-      submitBtn.classList.remove('is-loading');
-      submitBtn.textContent = 'Kirim';
-      submitBtn.disabled = !validateForm();
+      submitBtn.classList.remove('is-loading'); submitBtn.textContent = 'Kirim'; submitBtn.disabled = !validateForm();
     }
   });
 
-  // focus trap modal
   let focusTrapRemovers = [];
   function trapFocus(container){
     const focusable = 'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -610,13 +517,10 @@
   }
   function releaseFocus(){ focusTrapRemovers.forEach(fn=>fn()); focusTrapRemovers=[]; }
 
-  // init
   (async function init(){
     try{
-      console.log('init');
       const r = await fetch('/api/campaign-categories', { cache:'no-store' });
       const j = await r.json();
-      console.log('fetch campaign category', j);
       if (r.ok && Array.isArray(j.values)){
         const opts = ['<option value="all">Semua Kategori</option>']
           .concat(j.values.map(v => `<option value="${String(v.value).replace(/"/g,'&quot;')}">${v.label}</option>`));
@@ -626,6 +530,6 @@
     }catch(e){ console.warn('Gagal memuat kategori', e.message); }
     await loadFeatured();
     await load();
-    validateForm(); // initial state tombol
+    validateForm();
   })();
 })();
