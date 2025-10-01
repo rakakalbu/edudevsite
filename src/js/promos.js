@@ -215,12 +215,18 @@
 
   async function loadFeatured(){
     try{
+      console.log('load featured')
       const r = await fetch(`/api/campaigns?status=active&page=1&limit=12`, { cache:'no-store' });
+      console.log('fetch campaign status active', r.json())
       const j = await r.json();
-      if (!r.ok) throw new Error(j.message || 'Gagal ambil featured');
-
+      if (!r.ok) {
+        console.log('fetch error', j.message)
+        throw new Error(j.message || 'Gagal ambil featured')
+      };
+      
       const recs = (j.records || []).slice(0, 8);
       if (!recs.length) { featWrap.hidden = true; return; }
+      console.log('recs', recs)
 
       slides = recs;
       featTrack.innerHTML = recs.map(buildSlide).join('');
@@ -608,7 +614,9 @@
   // init
   (async function init(){
     try{
+      console.log('init');
       const r = await fetch('/api/campaign-categories', { cache:'no-store' });
+      console.log('fetch campaign category', r.json());
       const j = await r.json();
       if (r.ok && Array.isArray(j.values)){
         const opts = ['<option value="all">Semua Kategori</option>']
