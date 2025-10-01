@@ -326,6 +326,7 @@
   // Abortable list fetch
   let listAbort;
   async function load(){
+    console.log('test load');
     setUrlFromState();
     msgEl.textContent = "Memuat promo…";
     grid.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
@@ -342,7 +343,12 @@
       listAbort?.abort(); listAbort = new AbortController();
       const r = await fetch(`/api/campaigns?${params}`, { signal:listAbort.signal, cache:'no-store' });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.message || "Gagal mengambil data");
+      console.log('test fetch campaign', r.json())
+      if (!r.ok) 
+        {
+          console.log(j.message)
+          throw new Error(j.message || "Gagal mengambil data");
+        }
 
       state.total = j.total || 0;
       const items = j.records || [];
@@ -354,6 +360,7 @@
              </div>
            </div>`;
 
+      console.log('items', items);
       if (!items.length) {
         const btnReset = $("#resetFilters");
         if (btnReset) btnReset.onclick = () => {
@@ -373,6 +380,7 @@
       // kuota & gambar dinamis
       items.forEach(it => observeQuotaForId(it.id));
       wireImageResolver(grid);
+      console.log('finish load')
 
     } catch (e) {
       if (e.name === 'AbortError') return;
