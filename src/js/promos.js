@@ -215,18 +215,18 @@
 
   async function loadFeatured(){
     try{
-      console.log('load featured')
+      console.log('load featured');
       const r = await fetch(`/api/campaigns?status=active&page=1&limit=12`, { cache:'no-store' });
-      console.log('fetch campaign status active', r.json())
       const j = await r.json();
+      console.log('fetch campaign status active', j);
       if (!r.ok) {
-        console.log('fetch error', j.message)
-        throw new Error(j.message || 'Gagal ambil featured')
+        console.log('fetch error', j.message);
+        throw new Error(j.message || 'Gagal ambil featured');
       };
       
       const recs = (j.records || []).slice(0, 8);
       if (!recs.length) { featWrap.hidden = true; return; }
-      console.log('recs', recs)
+      console.log('recs', recs);
 
       slides = recs;
       featTrack.innerHTML = recs.map(buildSlide).join('');
@@ -349,12 +349,11 @@
       listAbort?.abort(); listAbort = new AbortController();
       const r = await fetch(`/api/campaigns?${params}`, { signal:listAbort.signal, cache:'no-store' });
       const j = await r.json();
-      console.log('test fetch campaign', r.json())
-      if (!r.ok) 
-        {
-          console.log(j.message)
-          throw new Error(j.message || "Gagal mengambil data");
-        }
+      console.log('test fetch campaign', j);
+      if (!r.ok) {
+        console.log(j.message);
+        throw new Error(j.message || "Gagal mengambil data");
+      }
 
       state.total = j.total || 0;
       const items = j.records || [];
@@ -386,7 +385,7 @@
       // kuota & gambar dinamis
       items.forEach(it => observeQuotaForId(it.id));
       wireImageResolver(grid);
-      console.log('finish load')
+      console.log('finish load');
 
     } catch (e) {
       if (e.name === 'AbortError') return;
@@ -616,8 +615,8 @@
     try{
       console.log('init');
       const r = await fetch('/api/campaign-categories', { cache:'no-store' });
-      console.log('fetch campaign category', r.json());
       const j = await r.json();
+      console.log('fetch campaign category', j);
       if (r.ok && Array.isArray(j.values)){
         const opts = ['<option value="all">Semua Kategori</option>']
           .concat(j.values.map(v => `<option value="${String(v.value).replace(/"/g,'&quot;')}">${v.label}</option>`));
