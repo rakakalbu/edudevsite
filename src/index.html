@@ -41,7 +41,7 @@
                 <li class="nav-item"><a href="#testimonials" class="nav-link">Testimoni</a></li>
                 <li class="nav-item"><a href="#contact" class="nav-link">Kontak</a></li>
                 <li class="nav-item">
-                  <a href="/promos?status=active&page=1" class="nav-link">Promo</a>
+                  <a href="/promos?status=active&page=1" class="nav-link">Events</a>
                 </li>
             </ul>
             <div class="nav-cta">
@@ -189,7 +189,14 @@
           <div class="form-group">
             <label>Campus <span style="color:#e11d48">*</span></label>
             <div id="campusRadios" class="radio-list" aria-live="polite">
-              <div class="note">Memuat daftar campus…</div>
+              <label class="radio-item">
+                <input type="radio" name="campus" value="APL" required />
+                <span>Metro Seven @APL Tower</span>
+              </label>
+              <label class="radio-item">
+                <input type="radio" name="campus" value="Cikupa" />
+                <span>Metro Seven @Cikupa</span>
+              </label>
             </div>
             <div id="campusError" class="field-error" style="display:none"></div>
           </div>
