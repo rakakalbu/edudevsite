@@ -206,7 +206,7 @@
         <div class="meta">${[priceStr].filter(Boolean).join(' · ')}</div>
         <div class="actions">
           <button class="btn btn-primary" type="button" data-register data-campaign="${rec.id}" data-name="${rec.name}">
-            Daftar Promo
+            Daftar
           </button>
         </div>
       </div>
@@ -315,7 +315,7 @@
           </div>
           <div class="actions">
             <button class="btn btn-primary" type="button" data-register data-campaign="${id}" data-name="${name}">
-              Daftar Promo
+              Daftar
             </button>
           </div>
         </div>
