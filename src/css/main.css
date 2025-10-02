@@ -119,7 +119,7 @@ p { color: var(--text-light); }
 .info-item span { color: var(--text-light); }
 .contact-form-wrapper .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .contact-form-wrapper .form-group { margin-bottom: 24px; }
-.contact-form-wrapper .form-group label { display: block; font-weight: 600; margin-bottom: 8px; }
+.contact-form-wrapper .form-group label { font-weight: 600; margin-bottom: 8px; }
 .contact-form-wrapper .form-control { width: 100%; padding: 14px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; font-family: 'Inter', sans-serif; }
 .contact-form-wrapper .form-control:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 3px #E9D8FD; }
 .btn-full { width: 100%; }
