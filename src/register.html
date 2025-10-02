@@ -107,7 +107,7 @@
           <div class="form-group"><label>Study Program *</label><select id="programSelect" class="form-control"><option value="">Pilih program</option></select></div>
         </div>
         <div id="msgStep2" class="field-error" style="display:none"></div>
-        <div class="actions"><button type="submit" class="submit-btn">Simpan & Lanjut ke Pembayaran</button></div>
+        <div class="actions"><button id="btnBack2" type="button" class="btn">Kembali</button><button type="submit" class="submit-btn">Simpan & Lanjut ke Pembayaran</button></div>
       </form>
     </section>
 
@@ -125,6 +125,7 @@
           <div id="msgStep3" class="field-error" style="display:none"></div>
         </div>
         <div class="actions">
+          <button id="btnBack3" type="button" class="btn">Kembali</button>
           <button type="submit" class="submit-btn">Upload & Lanjut</button>
         </div>
       </form>
@@ -162,14 +163,14 @@
         </div>
 
         <div id="msgStep4" class="field-error" style="display:none"></div>
-        <div class="actions"><button type="submit" class="submit-btn">Simpan & Lanjut</button></div>
+        <div class="actions"><button id="btnBack4" type="button" class="btn">Kembali</button><button type="submit" class="submit-btn">Simpan & Lanjut</button></div>
       </form>
     </section>
 
     <!-- ===================== STEP 5 ===================== -->
     <section id="step5" class="form-step" data-step="5" style="display:none">
       <div class="summary-card" id="reviewBox"></div>
-      <div class="actions"><button id="btnSubmitFinal" type="button" class="submit-btn">Submit</button></div>
+      <div class="actions"><button id="btnBack5" type="button" class="btn">Kembali</button><button id="btnSubmitFinal" type="button" class="submit-btn">Submit</button></div>
     </section>
   </main>
 
