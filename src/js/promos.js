@@ -426,13 +426,13 @@
           if (btn) btn.textContent = 'Kuota Penuh';
         } else {
           btn?.removeAttribute('disabled'); btn?.classList.remove('is-disabled');
-          if (btn) btn.textContent = 'Daftar Promo';
+          if (btn) btn.textContent = 'Daftar';
         }
       } else {
         const used = j.used || 0;
         text = `Pendaftar: ${used}`;
         btn?.removeAttribute('disabled'); btn?.classList.remove('is-disabled');
-        if (btn) btn.textContent = 'Daftar Promo';
+        if (btn) btn.textContent = 'Daftar';
       }
 
       badge.textContent = text;
