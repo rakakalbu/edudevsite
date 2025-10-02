@@ -256,6 +256,6 @@ label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-
   .step-item::after { display: none; }     /* sembunyikan connector */
   .step-item .step-label {
     margin-left: 0; margin-top: 6px;
-    text-align: center; display: block;
+    text-align: center;
   }
 }
