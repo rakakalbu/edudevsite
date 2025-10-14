@@ -1,236 +1,397 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <META HTTP-EQUIV="Content-type" CONTENT="text/html; charset=UTF-8">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
     <title>Universitas Metro Seven</title>
-    <meta name="description" content="Bergabunglah dengan Universitas Metro Seven untuk pendidikan modern yang dirancang untuk masa depan industri.">
-    
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <meta
+      name="description"
+      content="Bergabunglah dengan Universitas Metro Seven untuk pendidikan modern yang dirancang untuk masa depan industri."
+    />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
 
     <!-- Small helper style in case your CSS doesn't have an outline button yet -->
     <style>
-      .nav-cta{display:flex;gap:12px;align-items:center}
-      .btn-outline{
-        display:inline-flex;align-items:center;justify-content:center;
-        padding:10px 18px;border-radius:999px;border:2px solid #6d28d9;
-        color:#6d28d9;background:transparent;font-weight:700;text-decoration:none;
-        transition:background-color .12s ease, transform .12s ease;
+      .nav-cta {
+        display: flex;
+        gap: 12px;
+        align-items: center;
       }
-      .btn-outline:hover{background:rgba(109,40,217,.06);transform:translateY(-1px)}
-      .btn-outline:active{transform:translateY(0) scale(.99)}
+      .btn-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 2px solid #6d28d9;
+        color: #6d28d9;
+        background: transparent;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color 0.12s ease, transform 0.12s ease;
+      }
+      .btn-outline:hover {
+        background: rgba(109, 40, 217, 0.06);
+        transform: translateY(-1px);
+      }
+      .btn-outline:active {
+        transform: translateY(0) scale(0.99);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <img src="assets/images/Logo-MetroSeven.png" alt="Metro Seven University Logo" class="logo">
-            </div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="#home" class="nav-link">Beranda</a></li>
-                <li class="nav-item"><a href="#programs" class="nav-link">Program</a></li>
-                <li class="nav-item"><a href="#testimonials" class="nav-link">Testimoni</a></li>
-                <li class="nav-item"><a href="#contact" class="nav-link">Kontak</a></li>
-                <li class="nav-item">
-                  <a href="/promos?status=active&page=1" class="nav-link">Events</a>
-                </li>
-            </ul>
-            <div class="nav-cta">
-                 <!-- NEW Login button -->
-                 <a href="https://salesforceedupakcage.vercel.app/login"
-                    target="_blank" rel="noopener"
-                    class="btn btn-outline">Login</a>
-                 <!-- Existing Register button -->
-                 <a href="register.html" target="_blank" class="btn btn-primary">Register</a>
-            </div>
-            <div class="hamburger">
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            </div>
+      <div class="nav-container">
+        <div class="nav-logo">
+          <img
+            src="assets/images/Logo-MetroSeven.png"
+            alt="Metro Seven University Logo"
+            class="logo"
+          />
         </div>
+        <ul class="nav-menu">
+          <li class="nav-item"><a href="#home" class="nav-link">Beranda</a></li>
+          <li class="nav-item">
+            <a href="#programs" class="nav-link">Program</a>
+          </li>
+          <li class="nav-item">
+            <a href="#testimonials" class="nav-link">Testimoni</a>
+          </li>
+          <li class="nav-item">
+            <a href="#contact" class="nav-link">Kontak</a>
+          </li>
+          <li class="nav-item">
+            <a href="/promos?status=active&page=1" class="nav-link">Events</a>
+          </li>
+        </ul>
+        <div class="nav-cta">
+          <!-- NEW Login button -->
+          <a
+            href="https://salesforceedupakcage.vercel.app/login"
+            target="_blank"
+            rel="noopener"
+            class="btn btn-outline"
+            >Login</a
+          >
+          <!-- Existing Register button -->
+          <a href="registerschool.html" target="_blank" class="btn btn-primary"
+            >Register</a
+          >
+        </div>
+        <div class="hamburger">
+          <span class="bar"></span><span class="bar"></span
+          ><span class="bar"></span>
+        </div>
+      </div>
     </nav>
 
     <section id="home" class="hero">
-        <div class="container hero-container">
-            <div class="hero-text">
-                <h1>Temukan Potensi Anda, Bangun Masa Depan Cerah.</h1>
-                <p class="hero-subtitle">Pendidikan berkualitas dengan kurikulum modern yang dirancang untuk mempersiapkan Anda menjadi pemimpin di industri masa depan.</p>
-                <div class="hero-buttons">
-                    <a href="#programs" class="btn btn-primary">Lihat Program</a>
-                    <a href="#contact" class="btn btn-secondary">Hubungi Kami</a>
-                </div>
-                <div class="hero-stats">
-                    <div class="stat-item"><h4>5k+</h4><p>Alumni Sukses</p></div>
-                    <div class="stat-item"><h4>10+</h4><p>Program Studi</p></div>
-                </div>
+      <div class="container hero-container">
+        <div class="hero-text">
+          <h1>Temukan Potensi Anda, Bangun Masa Depan Cerah.</h1>
+          <p class="hero-subtitle">
+            Pendidikan berkualitas dengan kurikulum modern yang dirancang untuk
+            mempersiapkan Anda menjadi pemimpin di industri masa depan.
+          </p>
+          <div class="hero-buttons">
+            <a href="#programs" class="btn btn-primary">Lihat Program</a>
+            <a href="#contact" class="btn btn-secondary">Hubungi Kami</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-item">
+              <h4>5k+</h4>
+              <p>Alumni Sukses</p>
             </div>
-            <div class="hero-image-wrapper">
-                <div class="hero-image-bg"></div>
-                <img src="assets/images/HeroImage-MetroSeven.png" alt="Mahasiswa Metro Seven University" class="hero-image">
+            <div class="stat-item">
+              <h4>10+</h4>
+              <p>Program Studi</p>
             </div>
+          </div>
         </div>
+        <div class="hero-image-wrapper">
+          <div class="hero-image-bg"></div>
+          <img
+            src="assets/images/HeroImage-MetroSeven.png"
+            alt="Mahasiswa Metro Seven University"
+            class="hero-image"
+          />
+        </div>
+      </div>
     </section>
 
     <section id="programs" class="programs">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Program Unggulan</span>
-                <h2 class="section-title">Fokus Pada Keahlian Masa Depan</h2>
-            </div>
-            <div class="programs-grid">
-                <div class="program-card">
-                    <div class="program-icon"><i class="fas fa-laptop-code"></i></div>
-                    <h3>Teknik Informatika</h3><p>Menjadi ahli dalam pengembangan perangkat lunak, AI, dan keamanan siber.</p>
-                </div>
-                <div class="program-card ">
-                    <div class="program-icon"><i class="fas fa-chart-line"></i></div>
-                    <h3>Manajemen Bisnis</h3><p>Mempelajari strategi bisnis digital, manajemen inovatif, dan kewirausahaan.</p>
-                </div>
-                <div class="program-card">
-                    <div class="program-icon"><i class="fas fa-palette"></i></div>
-                    <h3>Desain Komunikasi Visual</h3><p>Mengasah kreativitas dalam branding, UI/UX design, dan media digital.</p>
-                </div>
-            </div>
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Program Unggulan</span>
+          <h2 class="section-title">Fokus Pada Keahlian Masa Depan</h2>
         </div>
+        <div class="programs-grid">
+          <div class="program-card">
+            <div class="program-icon"><i class="fas fa-laptop-code"></i></div>
+            <h3>Teknik Informatika</h3>
+            <p>
+              Menjadi ahli dalam pengembangan perangkat lunak, AI, dan keamanan
+              siber.
+            </p>
+          </div>
+          <div class="program-card">
+            <div class="program-icon"><i class="fas fa-chart-line"></i></div>
+            <h3>Manajemen Bisnis</h3>
+            <p>
+              Mempelajari strategi bisnis digital, manajemen inovatif, dan
+              kewirausahaan.
+            </p>
+          </div>
+          <div class="program-card">
+            <div class="program-icon"><i class="fas fa-palette"></i></div>
+            <h3>Desain Komunikasi Visual</h3>
+            <p>
+              Mengasah kreativitas dalam branding, UI/UX design, dan media
+              digital.
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
-    
+
     <section id="testimonials" class="testimonials">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Testimoni</span>
-                <h2 class="section-title">Apa Kata Para Alumni Kami?</h2>
-            </div>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <p class="quote">"Kurikulum di Metro Seven sangat relevan dengan industri. Saya merasa siap kerja bahkan sebelum lulus."</p>
-                    <div class="author">
-                        <img src="assets/images/Testimoni-MetroSeven.png" alt="Sarah Wijaya">
-                        <div class="author-info"><h4>Ahmad Pratama</h4><span>Software Engineer, Tech Corp</span></div>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <p class="quote">"Lingkungan belajarnya sangat mendukung dan para dosennya adalah praktisi ahli di bidangnya. Pengalaman yang luar biasa!"</p>
-                    <div class="author">
-                        <img src="assets/images/Testimoni2-MetroSeven.png" alt="Ahmad Pratama">
-                        <div class="author-info"><h4>Sarah Wijaya</h4><span>Business Analyst, Finance Plus</span></div>
-                    </div>
-                </div>
-            </div>
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Testimoni</span>
+          <h2 class="section-title">Apa Kata Para Alumni Kami?</h2>
         </div>
+        <div class="testimonials-grid">
+          <div class="testimonial-card">
+            <p class="quote">
+              "Kurikulum di Metro Seven sangat relevan dengan industri. Saya
+              merasa siap kerja bahkan sebelum lulus."
+            </p>
+            <div class="author">
+              <img
+                src="assets/images/Testimoni-MetroSeven.png"
+                alt="Sarah Wijaya"
+              />
+              <div class="author-info">
+                <h4>Ahmad Pratama</h4>
+                <span>Software Engineer, Tech Corp</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <p class="quote">
+              "Lingkungan belajarnya sangat mendukung dan para dosennya adalah
+              praktisi ahli di bidangnya. Pengalaman yang luar biasa!"
+            </p>
+            <div class="author">
+              <img
+                src="assets/images/Testimoni2-MetroSeven.png"
+                alt="Ahmad Pratama"
+              />
+              <div class="author-info">
+                <h4>Sarah Wijaya</h4>
+                <span>Business Analyst, Finance Plus</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
-<!-- === CONTACT (REPLACE WHOLE SECTION) === -->
-<section id="contact" class="contact">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-tag">Hubungi Kami</span>
-      <h2 class="section-title">Punya Pertanyaan?</h2>
-      <p class="section-subtitle">Isi formulir di bawah ini dan tim admisi kami akan segera menghubungi Anda.</p>
-    </div>
+    <!-- === CONTACT (REPLACE WHOLE SECTION) === -->
+    <section id="contact" class="contact">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Hubungi Kami</span>
+          <h2 class="section-title">Punya Pertanyaan?</h2>
+          <p class="section-subtitle">
+            Isi formulir di bawah ini dan tim admisi kami akan segera
+            menghubungi Anda.
+          </p>
+        </div>
 
-    <div class="contact-layout">
-      <div class="contact-info">
-        <h3>Informasi Kontak</h3>
-        <p>Kami siap membantu menjawab semua pertanyaan Anda mengenai pendaftaran, program studi, dan kehidupan kampus.</p>
-        <div class="info-item">
-          <i class="fas fa-phone"></i>
-          <div class="info-text"><h4>Telepon</h4><span>(021) 123-4567</span></div>
-        </div>
-        <div class="info-item">
-          <i class="fas fa-envelope"></i>
-          <div class="info-text"><h4>Email</h4><span>info@metroseven.ac.id</span></div>
-        </div>
-        <div class="info-item">
-          <i class="fas fa-map-marker-alt"></i>
-          <div class="info-text"><h4>Alamat</h4><span>Jl. Pendidikan No. 123, Jakarta Selatan</span></div>
+        <div class="contact-layout">
+          <div class="contact-info">
+            <h3>Informasi Kontak</h3>
+            <p>
+              Kami siap membantu menjawab semua pertanyaan Anda mengenai
+              pendaftaran, program studi, dan kehidupan kampus.
+            </p>
+            <div class="info-item">
+              <i class="fas fa-phone"></i>
+              <div class="info-text">
+                <h4>Telepon</h4>
+                <span>(021) 123-4567</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-envelope"></i>
+              <div class="info-text">
+                <h4>Email</h4>
+                <span>info@metroseven.ac.id</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <div class="info-text">
+                <h4>Alamat</h4>
+                <span>Jl. Pendidikan No. 123, Jakarta Selatan</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-form-wrapper">
+            <form
+              id="contactForm"
+              novalidate
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+            >
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="first_name"
+                    >First name <span style="color: #e11d48">*</span></label
+                  >
+                  <input
+                    id="first_name"
+                    name="data-first"
+                    type="text"
+                    class="form-control"
+                    required
+                    autocomplete="off"
+                    autocapitalize="off"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="last_name">Last name</label>
+                  <input
+                    id="last_name"
+                    name="data-last"
+                    type="text"
+                    class="form-control"
+                    autocomplete="off"
+                    autocapitalize="off"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="email"
+                    >Email <span style="color: #e11d48">*</span></label
+                  >
+                  <input
+                    id="email"
+                    name="data-email"
+                    type="email"
+                    class="form-control"
+                    required
+                    autocomplete="off"
+                    autocapitalize="off"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="phone"
+                    >Phone (Indonesia)
+                    <span style="color: #e11d48">*</span></label
+                  >
+                  <input
+                    id="phone"
+                    name="data-phone"
+                    type="tel"
+                    class="form-control"
+                    placeholder="0812xxxxxxx"
+                    inputmode="numeric"
+                    pattern="[0-9\s.+()-]*"
+                    required
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+
+              <!-- CAMPUS (RADIO) -->
+              <div class="form-group">
+                <label>Campus <span style="color: #e11d48">*</span></label>
+                <div id="campusRadios" class="radio-list" aria-live="polite">
+                  <label class="radio-item">
+                    <input type="radio" name="campus" value="APL" required />
+                    <span>Metro Seven @APL Tower</span>
+                  </label>
+                  <label class="radio-item">
+                    <input type="radio" name="campus" value="Cikupa" />
+                    <span>Metro Seven @Cikupa</span>
+                  </label>
+                </div>
+                <div
+                  id="campusError"
+                  class="field-error"
+                  style="display: none"
+                ></div>
+              </div>
+
+              <!-- JURUSAN (opsional, masuk Description) -->
+              <div class="form-group">
+                <label for="major_interest"
+                  >Jurusan yang diminati (opsional)</label
+                >
+                <input
+                  id="major_interest"
+                  name="data-major"
+                  type="text"
+                  class="form-control"
+                  placeholder="Contoh: Teknik Informatika"
+                  autocomplete="off"
+                />
+              </div>
+
+              <input
+                type="submit"
+                class="btn btn-primary btn-full"
+                value="Kirim Pesan"
+              />
+              <div
+                id="contactMsg"
+                class="debug-info"
+                style="display: none"
+              ></div>
+            </form>
+          </div>
         </div>
       </div>
-
-      <div class="contact-form-wrapper">
-        <form id="contactForm" novalidate
-              autocomplete="off" autocapitalize="off" spellcheck="false">
-          <div class="form-grid">
-
-            <div class="form-group">
-              <label for="first_name">First name <span style="color:#e11d48">*</span></label>
-              <input id="first_name" name="data-first" type="text" class="form-control"
-                     required autocomplete="off" autocapitalize="off" />
-            </div>
-
-            <div class="form-group">
-              <label for="last_name">Last name</label>
-              <input id="last_name" name="data-last" type="text" class="form-control"
-                     autocomplete="off" autocapitalize="off" />
-            </div>
-
-            <div class="form-group">
-              <label for="email">Email <span style="color:#e11d48">*</span></label>
-              <input id="email" name="data-email" type="email" class="form-control"
-                     required autocomplete="off" autocapitalize="off" />
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Phone (Indonesia) <span style="color:#e11d48">*</span></label>
-              <input id="phone" name="data-phone" type="tel" class="form-control"
-                     placeholder="0812xxxxxxx" inputmode="numeric" pattern="[0-9\s.+()-]*"
-                     required autocomplete="off" />
-            </div>
-          </div>
-
-          <!-- CAMPUS (RADIO) -->
-          <div class="form-group">
-            <label>Campus <span style="color:#e11d48">*</span></label>
-            <div id="campusRadios" class="radio-list" aria-live="polite">
-              <label class="radio-item">
-                <input type="radio" name="campus" value="APL" required />
-                <span>Metro Seven @APL Tower</span>
-              </label>
-              <label class="radio-item">
-                <input type="radio" name="campus" value="Cikupa" />
-                <span>Metro Seven @Cikupa</span>
-              </label>
-            </div>
-            <div id="campusError" class="field-error" style="display:none"></div>
-          </div>
-
-          <!-- JURUSAN (opsional, masuk Description) -->
-          <div class="form-group">
-            <label for="major_interest">Jurusan yang diminati (opsional)</label>
-            <input id="major_interest" name="data-major" type="text" class="form-control"
-                   placeholder="Contoh: Teknik Informatika" autocomplete="off" />
-          </div>
-
-          <input type="submit" class="btn btn-primary btn-full" value="Kirim Pesan" />
-          <div id="contactMsg" class="debug-info" style="display:none"></div>
-        </form>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
     <footer class="footer">
-        <div class="container footer-container">
-            <p>&copy; 2025 Metro Seven University. Semua hak dilindungi.</p>
-            <div class="social-links">
-                <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-            </div>
+      <div class="container footer-container">
+        <p>&copy; 2025 Metro Seven University. Semua hak dilindungi.</p>
+        <div class="social-links">
+          <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
         </div>
+      </div>
     </footer>
 
-    <button id="scrollToTop" class="scroll-to-top"><i class="fas fa-chevron-up"></i></button>
+    <button id="scrollToTop" class="scroll-to-top">
+      <i class="fas fa-chevron-up"></i>
+    </button>
 
     <script src="js/animations.js"></script>
     <script src="js/main.js"></script>
     <script src="js/contact.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</body>
+  </body>
 </html>
