@@ -301,7 +301,7 @@
       showWizardHeader(true);
       showLoading("Mendaftarkan akun…");
 
-      const j = await api("/api/auth-register", {
+      const j = await api("/api/auth-school-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
