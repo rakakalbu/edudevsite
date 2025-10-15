@@ -1,0 +1,54 @@
+@media (max-width: 1200px) {
+  .tracks {
+    height: 420px;
+  }
+  .motto {
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .grid--features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid--testi {
+    grid-template-columns: 1fr;
+  }
+  .grid--campus {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hero__wrap {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 720px) {
+  .brandbox .logo {
+    height: 40px;
+  }
+  .motto {
+    white-space: normal;
+    max-width: unset;
+  }
+  .contact__info {
+    grid-template-columns: 1fr;
+  }
+  .form__grid {
+    grid-template-columns: 1fr;
+  }
+  .grid--campus {
+    grid-template-columns: 1fr;
+  }
+  .tracks {
+    gap: 14px;
+    height: 360px;
+  }
+  .side {
+    transform: rotate(-90deg) translateX(-6px);
+  }
+  .carousel__nav {
+    width: 38px;
+    height: 38px;
+  }
+}

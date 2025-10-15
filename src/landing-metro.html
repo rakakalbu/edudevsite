@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Metro Mini School — Sekolah Modern untuk Masa Depan</title>
+    <meta
+      name="description"
+      content="Metro Mini School: Sekolah modern Kurikulum Merdeka untuk jenjang TK hingga SMA, lingkungan aman, guru bersertifikat, dan ekskul beragam."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles-metro.css" />
+    <link rel="stylesheet" href="css/responsive-metro.css" />
+    <link rel="icon" href="https://placehold.co/32x32/png" />
+  </head>
+
+  <body>
+    <!-- NAVBAR -->
+    <nav class="nav">
+      <div class="nav__wrap">
+        <div class="brandbox" aria-label="Metro Mini School">
+          <img
+            src="assets/images/Logo_MetroMini.png"
+            alt="Metro Mini School"
+            class="logo"
+          />
+          <div class="brandmeta">
+            <span class="brandname">Metro Mini School</span>
+            <span class="motto"
+              >Mindful • Empowering • Transformative • Resilient •
+              Outstanding</span
+            >
+          </div>
+        </div>
+
+        <div class="nav__actions">
+          <a
+            href="https://salesforceedupakcage.vercel.app/login/choose"
+            target="_blank"
+            rel="noopener"
+            class="btn btn--ghost smal"
+            >Login</a
+          >
+          <!-- Existing Register button -->
+          <a
+            href="registerschool.html"
+            target="_blank"
+            class="btn btn--primary small"
+            >Register</a
+          >
+
+          <!-- Animated burger -->
+          <button
+            class="burger"
+            id="burgerBtn"
+            aria-label="Buka menu"
+            aria-expanded="false"
+            aria-controls="megaMenu"
+          >
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- FULLSCREEN BURGER MENU (inspired by CodePen) -->
+    <div class="mega" id="megaMenu" aria-hidden="true">
+      <div class="mega__backdrop" id="megaBackdrop" tabindex="-1"></div>
+      <nav class="mega__panel" role="menu">
+        <ul class="mega__list">
+          <li style="--i: 1">
+            <a href="#beranda" class="mega__link" role="menuitem">Beranda</a>
+          </li>
+          <li style="--i: 2">
+            <a href="#carousel" class="mega__link" role="menuitem">Galeri</a>
+          </li>
+          <li style="--i: 3">
+            <a href="#jenjang" class="mega__link" role="menuitem">Jenjang</a>
+          </li>
+          <li style="--i: 4">
+            <a href="#keunggulan" class="mega__link" role="menuitem"
+              >Keunggulan</a
+            >
+          </li>
+          <li style="--i: 5">
+            <a href="#testimoni" class="mega__link" role="menuitem"
+              >Testimoni</a
+            >
+          </li>
+          <li style="--i: 6">
+            <a href="#kampus" class="mega__link" role="menuitem">Kampus</a>
+          </li>
+          <li style="--i: 7">
+            <a href="#faq" class="mega__link" role="menuitem">FAQ</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- IMAGE CAROUSEL (compact) -->
+    <section id="carousel" class="carousel">
+      <div class="carousel__frame">
+        <div
+          class="carousel__viewport"
+          id="carouselViewport"
+          aria-live="polite"
+        >
+          <div
+            class="slide"
+            style="
+              background-image: url('https://picsum.photos/seed/mm1/1600/900');
+            "
+          >
+            <div class="slide__caption">
+              <h2>Lingkungan Belajar yang Aman & Nyaman</h2>
+              <p>Fokus pada karakter, kolaborasi, dan kemandirian siswa.</p>
+            </div>
+          </div>
+          <div
+            class="slide"
+            style="
+              background-image: url('https://picsum.photos/seed/mm2/1600/900');
+            "
+          >
+            <div class="slide__caption">
+              <h2>Kurikulum Merdeka Berbasis Proyek</h2>
+              <p>Bangun portofolio prestasi sejak dini.</p>
+            </div>
+          </div>
+          <div
+            class="slide"
+            style="
+              background-image: url('https://picsum.photos/seed/mm3/1600/900');
+            "
+          >
+            <div class="slide__caption">
+              <h2>Ekskul Beragam untuk Talenta Siswa</h2>
+              <p>Sains, seni, olahraga, kepemimpinan, dan sosial.</p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          class="carousel__nav prev"
+          aria-label="Sebelumnya"
+          id="prevSlide"
+        >
+          ❮
+        </button>
+        <button
+          class="carousel__nav next"
+          aria-label="Berikutnya"
+          id="nextSlide"
+        >
+          ❯
+        </button>
+
+        <div
+          class="carousel__dots"
+          id="carouselDots"
+          role="tablist"
+          aria-label="Slide selector"
+        ></div>
+      </div>
+    </section>
+
+    <!-- HERO -->
+    <header id="beranda" class="hero">
+      <div class="hero__wrap">
+        <div class="hero__text fx-reveal">
+          <h1>Temukan Potensi Anda, Bangun Masa Depan Cerah.</h1>
+          <p class="hero__sub">
+            Pendidikan berkarakter dengan Kurikulum Merdeka dan pendampingan
+            guru bersertifikat untuk menumbuhkan kemandirian dan prestasi siswa.
+          </p>
+          <div class="hero__cta">
+            <a href="#jenjang" class="btn btn--primary">Lihat Jenjang</a>
+          </div>
+          <div class="hero__stats">
+            <div class="stat">
+              <h4>5k+</h4>
+              <p>Alumni Sukses</p>
+            </div>
+            <div class="stat">
+              <h4>10+</h4>
+              <p>Program Pengembangan</p>
+            </div>
+          </div>
+        </div>
+        <div class="hero__media fx-reveal">
+          <div class="hero__blob"></div>
+          <img
+            src="https://picsum.photos/seed/metro-mini-hero/900/600"
+            alt="Ilustrasi siswa-siswi Metro Mini School"
+            class="hero__img"
+          />
+        </div>
+      </div>
+    </header>
+
+    <!-- EXPANDING CARDS (Jenjang TK–SMA) -->
+    <section id="jenjang" class="section">
+      <div class="container">
+        <div class="section__head fx-reveal">
+          <span class="tag">Jenjang Pendidikan</span>
+          <h2>Dari TK hingga SMA</h2>
+        </div>
+
+        <div class="tracks fx-reveal" aria-label="Pilih jenjang pendidikan">
+          <!-- TK -->
+          <a class="track t1" href="#kontak" aria-label="TK">
+            <span class="side">Kindergarten (TK)</span>
+            <div class="label">
+              <h3>Kindergarten (TK)</h3>
+              <p>
+                Belajar sambil bermain, sosial-emosional, motorik, kemandirian.
+              </p>
+              <span class="btn btn--ghost slim">LEARN MORE</span>
+            </div>
+          </a>
+
+          <!-- SD -->
+          <a class="track t2" href="#kontak" aria-label="SD">
+            <span class="side">Elementary School (SD)</span>
+            <div class="label">
+              <h3>Elementary School (SD)</h3>
+              <p>Fondasi literasi & numerasi, proyek tematik, karakter.</p>
+              <span class="btn btn--ghost slim">LEARN MORE</span>
+            </div>
+          </a>
+
+          <!-- SMP -->
+          <a class="track t3" href="#kontak" aria-label="SMP">
+            <span class="side">Junior High School (SMP)</span>
+            <div class="label">
+              <h3>Junior High School (SMP)</h3>
+              <p>Eksplorasi minat, kolaborasi, dan keterampilan abad 21.</p>
+              <span class="btn btn--ghost slim">LEARN MORE</span>
+            </div>
+          </a>
+
+          <!-- SMA -->
+          <a class="track t4" href="#kontak" aria-label="SMA">
+            <span class="side">Senior High School (SMA)</span>
+            <div class="label">
+              <h3>Senior High School (SMA)</h3>
+              <p>Peminatan, persiapan PTN/karier, dan portofolio prestasi.</p>
+              <span class="btn btn--ghost slim">LEARN MORE</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- KEUNGGULAN -->
+    <section id="keunggulan" class="section section--muted">
+      <div class="container">
+        <div class="section__head fx-reveal">
+          <span class="tag">Mengapa Metro Mini School?</span>
+          <h2>Keunggulan untuk Tumbuh & Berprestasi</h2>
+        </div>
+        <div class="grid grid--features">
+          <div class="feature fx-reveal">
+            <div class="feature__icon">👩‍🏫</div>
+            <h4>Guru Bersertifikat</h4>
+            <p>Pembelajaran diferensiasi & umpan balik berkelanjutan.</p>
+          </div>
+          <div class="feature fx-reveal">
+            <div class="feature__icon">📖</div>
+            <h4>Kurikulum Merdeka</h4>
+            <p>Projek Profil Pelajar Pancasila & portofolio karya.</p>
+          </div>
+          <div class="feature fx-reveal">
+            <div class="feature__icon">🛡️</div>
+            <h4>Lingkungan Aman</h4>
+            <p>Budaya saling menghargai & dukungan konseling.</p>
+          </div>
+          <div class="feature fx-reveal">
+            <div class="feature__icon">⭐</div>
+            <h4>Ekskul Kaya</h4>
+            <p>Sains, seni, olahraga, kepemimpinan, & sosial.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONI -->
+    <section id="testimoni" class="section">
+      <div class="container">
+        <div class="section__head fx-reveal">
+          <span class="tag">Testimoni</span>
+          <h2>Apa Kata Orang Tua & Alumni?</h2>
+        </div>
+        <div class="grid grid--testi">
+          <blockquote class="testi fx-reveal">
+            <p>
+              “Guru perhatian dan metode belajarnya menyenangkan. Anak jadi
+              lebih percaya diri.”
+            </p>
+            <footer>
+              <img
+                src="https://placehold.co/88x88/0E8F6E/FFFFFF?text=O"
+                alt="Foto orang tua"
+              />
+              <div>
+                <strong>Ibu Rani</strong><span>Orang tua siswa SD</span>
+              </div>
+            </footer>
+          </blockquote>
+          <blockquote class="testi fx-reveal">
+            <p>
+              “Pendampingan portofolio SMA sangat membantu saya masuk PTN
+              impian.”
+            </p>
+            <footer>
+              <img
+                src="https://placehold.co/88x88/0C7A59/FFFFFF?text=A"
+                alt="Foto alumni"
+              />
+              <div><strong>Aditya</strong><span>Alumni SMA</span></div>
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+    </section>
+
+    <!-- KAMPUS -->
+    <section id="kampus" class="section">
+      <div class="container">
+        <div class="section__head fx-reveal">
+          <span class="tag">Lokasi</span>
+          <h2>Unit Sekolah Metro Mini School</h2>
+        </div>
+        <div class="grid grid--campus">
+          <div class="campus fx-reveal">
+            <h4>Jakarta Selatan</h4>
+            <p>Jl. Pendidikan No. 123</p>
+            <a
+              class="link"
+              href="https://maps.google.com"
+              target="_blank"
+              rel="noopener"
+              >Lihat Peta</a
+            >
+          </div>
+          <div class="campus fx-reveal">
+            <h4>Tangerang</h4>
+            <p>Jl. Raya Modern No. 8</p>
+            <a
+              class="link"
+              href="https://maps.google.com"
+              target="_blank"
+              rel="noopener"
+              >Lihat Peta</a
+            >
+          </div>
+          <div class="campus fx-reveal">
+            <h4>Bekasi</h4>
+            <p>Jl. Industri No. 5</p>
+            <a
+              class="link"
+              href="https://maps.google.com"
+              target="_blank"
+              rel="noopener"
+              >Lihat Peta</a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section section--muted">
+      <div class="container">
+        <div class="section__head fx-reveal">
+          <span class="tag">FAQ</span>
+          <h2>Pertanyaan Umum</h2>
+        </div>
+        <div class="faq">
+          <details class="fx-reveal">
+            <summary>Bagaimana alur pendaftaran?</summary>
+            <p>
+              Isi formulir di bawah, tim kami akan menghubungi untuk konsultasi
+              dan jadwal kunjungan sekolah.
+            </p>
+          </details>
+          <details class="fx-reveal">
+            <summary>Apakah ada beasiswa?</summary>
+            <p>
+              Ada. Beasiswa prestasi & bantuan finansial. Detail akan dijelaskan
+              saat konsultasi.
+            </p>
+          </details>
+          <details class="fx-reveal">
+            <summary>Apakah ada layanan konseling?</summary>
+            <p>
+              Ya. Layanan konseling tersedia untuk siswa & kolaborasi orang
+              tua–sekolah.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- REGISTER -->
+    <section id="kontak" class="section">
+      <div class="container">
+        <div class="section__head fx-reveal">
+          <span class="tag">Registrasi Minat</span>
+          <h2>Ingin Mendaftar atau Konsultasi?</h2>
+          <p class="muted">
+            Isi formulir singkat di bawah. Kami akan menghubungi Anda segera.
+          </p>
+        </div>
+
+        <form id="contactLite" class="form fx-reveal" novalidate>
+          <div class="form__grid">
+            <label class="field">
+              <span>First name *</span>
+              <input type="text" id="firstName" required autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Last name</span>
+              <input type="text" id="lastName" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Email *</span>
+              <input type="email" id="email" required autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Phone (Indonesia) *</span>
+              <input
+                type="tel"
+                id="phone"
+                placeholder="0812xxxxxxx"
+                inputmode="numeric"
+                required
+              />
+            </label>
+          </div>
+
+          <fieldset class="field">
+            <legend>Jenjang yang diminati *</legend>
+            <div
+              class="radio-list"
+              role="radiogroup"
+              aria-label="Pilih jenjang"
+            >
+              <label
+                ><input type="radio" name="campus" value="TK" required />
+                TK</label
+              >
+              <label><input type="radio" name="campus" value="SD" /> SD</label>
+              <label
+                ><input type="radio" name="campus" value="SMP" /> SMP</label
+              >
+              <label
+                ><input type="radio" name="campus" value="SMA" /> SMA</label
+              >
+            </div>
+          </fieldset>
+
+          <label class="field">
+            <span>Minat khusus (opsional)</span>
+            <input
+              type="text"
+              id="major"
+              placeholder="Contoh: Sains, Musik, Olahraga"
+            />
+          </label>
+
+          <label class="check">
+            <input type="checkbox" id="consent" required />
+            <span
+              >Saya setuju data saya dihubungi untuk informasi sekolah.</span
+            >
+          </label>
+
+          <button type="submit" class="btn btn--primary btn--full">
+            Kirim
+          </button>
+          <p id="formMsg" class="form__msg" aria-live="polite"></p>
+        </form>
+
+        <div class="contact__info fx-reveal">
+          <div><strong>Telepon:</strong> (021) 123-4567</div>
+          <div><strong>Email:</strong> info@metrominischool.ac.id</div>
+          <div>
+            <strong>Alamat:</strong> Jl. Pendidikan No. 123, Jakarta Selatan
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="container footer__wrap">
+        <p>© 2025 Metro Mini School. Semua hak dilindungi.</p>
+        <div class="social">
+          <a href="#" aria-label="Facebook"></a>
+          <a href="#" aria-label="Instagram"></a>
+          <a href="#" aria-label="LinkedIn"></a>
+        </div>
+      </div>
+    </footer>
+
+    <button id="toTop" class="totop" aria-label="Ke atas">⤴</button>
+
+    <script src="js/effects-metro.js"></script>
+    <script src="js/app-metro.js"></script>
+  </body>
+</html>

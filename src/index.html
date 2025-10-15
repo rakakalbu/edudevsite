@@ -1,397 +1,453 @@
 <!DOCTYPE html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
-    <title>Universitas Metro Seven</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Golden Metro Foundation Indonesia — Yayasan Pendidikan</title>
     <meta
       name="description"
-      content="Bergabunglah dengan Universitas Metro Seven untuk pendidikan modern yang dirancang untuk masa depan industri."
+      content="GMFI menaungi Metro University dan Metro School. Pendidikan berkelanjutan dari sekolah hingga universitas."
     />
-
-    <link rel="stylesheet" href="css/main.css" />
-    <link rel="stylesheet" href="css/responsive.css" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
-
-    <!-- Small helper style in case your CSS doesn't have an outline button yet -->
-    <style>
-      .nav-cta {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-      }
-      .btn-outline {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 18px;
-        border-radius: 999px;
-        border: 2px solid #6d28d9;
-        color: #6d28d9;
-        background: transparent;
-        font-weight: 700;
-        text-decoration: none;
-        transition: background-color 0.12s ease, transform 0.12s ease;
-      }
-      .btn-outline:hover {
-        background: rgba(109, 40, 217, 0.06);
-        transform: translateY(-1px);
-      }
-      .btn-outline:active {
-        transform: translateY(0) scale(0.99);
-      }
-    </style>
+    <link rel="stylesheet" href="css/gmfi.css" />
   </head>
   <body>
-    <nav class="navbar">
-      <div class="nav-container">
-        <div class="nav-logo">
+    <a class="skip-link" href="#main">Lewati ke konten utama</a>
+
+    <!-- Header -->
+    <header class="site-header" role="banner">
+      <div class="container header-inner">
+        <div class="brandbox">
           <img
-            src="assets/images/Logo-MetroSeven.png"
-            alt="Metro Seven University Logo"
+            src="assets/images/Logo_GMFI.png"
+            alt="Golden Metro Foundation Indonesia"
             class="logo"
           />
+          <div class="motto">
+            Mindful • Empowering • Transformative • Resilient • Outstanding
+          </div>
         </div>
-        <ul class="nav-menu">
-          <li class="nav-item"><a href="#home" class="nav-link">Beranda</a></li>
-          <li class="nav-item">
-            <a href="#programs" class="nav-link">Program</a>
-          </li>
-          <li class="nav-item">
-            <a href="#testimonials" class="nav-link">Testimoni</a>
-          </li>
-          <li class="nav-item">
-            <a href="#contact" class="nav-link">Kontak</a>
-          </li>
-          <li class="nav-item">
-            <a href="/promos?status=active&page=1" class="nav-link">Events</a>
-          </li>
-        </ul>
-        <div class="nav-cta">
-          <!-- NEW Login button -->
-          <a
-            href="https://salesforceedupakcage.vercel.app/login/choose"
-            target="_blank"
-            rel="noopener"
-            class="btn btn-outline"
-            >Login</a
+
+        <nav class="nav" aria-label="Navigasi utama">
+          <button
+            class="nav-toggle"
+            aria-expanded="false"
+            aria-controls="navMenu"
+            aria-label="Buka menu"
           >
-          <!-- Existing Register button -->
-          <a href="registerschool.html" target="_blank" class="btn btn-primary"
-            >Register</a
-          >
-        </div>
-        <div class="hamburger">
-          <span class="bar"></span><span class="bar"></span
-          ><span class="bar"></span>
-        </div>
+            <span class="sr-only">Buka menu</span>
+            <div class="burger" aria-hidden="true"></div>
+          </button>
+
+          <ul id="navMenu" class="nav-menu" role="menu">
+            <li role="none"><a role="menuitem" href="#about">Tentang</a></li>
+            <li role="none"><a role="menuitem" href="#timeline">Sejarah</a></li>
+            <li role="none">
+              <a role="menuitem" href="#ecosystem">Ekosistem</a>
+            </li>
+            <li role="none">
+              <a role="menuitem" href="#initiatives">Program</a>
+            </li>
+            <li role="none"><a role="menuitem" href="#impact">Dampak</a></li>
+            <li role="none"><a role="menuitem" href="#gallery">Galeri</a></li>
+            <li role="none"><a role="menuitem" href="#faq">FAQ</a></li>
+          </ul>
+        </nav>
       </div>
-    </nav>
+    </header>
 
-    <section id="home" class="hero">
-      <div class="container hero-container">
-        <div class="hero-text">
-          <h1>Temukan Potensi Anda, Bangun Masa Depan Cerah.</h1>
-          <p class="hero-subtitle">
-            Pendidikan berkualitas dengan kurikulum modern yang dirancang untuk
-            mempersiapkan Anda menjadi pemimpin di industri masa depan.
-          </p>
-          <div class="hero-buttons">
-            <a href="#programs" class="btn btn-primary">Lihat Program</a>
-            <a href="#contact" class="btn btn-secondary">Hubungi Kami</a>
-          </div>
-          <div class="hero-stats">
-            <div class="stat-item">
-              <h4>5k+</h4>
-              <p>Alumni Sukses</p>
-            </div>
-            <div class="stat-item">
-              <h4>10+</h4>
-              <p>Program Studi</p>
-            </div>
-          </div>
-        </div>
-        <div class="hero-image-wrapper">
-          <div class="hero-image-bg"></div>
-          <img
-            src="assets/images/HeroImage-MetroSeven.png"
-            alt="Mahasiswa Metro Seven University"
-            class="hero-image"
-          />
-        </div>
-      </div>
-    </section>
-
-    <section id="programs" class="programs">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Program Unggulan</span>
-          <h2 class="section-title">Fokus Pada Keahlian Masa Depan</h2>
-        </div>
-        <div class="programs-grid">
-          <div class="program-card">
-            <div class="program-icon"><i class="fas fa-laptop-code"></i></div>
-            <h3>Teknik Informatika</h3>
-            <p>
-              Menjadi ahli dalam pengembangan perangkat lunak, AI, dan keamanan
-              siber.
+    <main id="main">
+      <!-- HERO -->
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="container hero-inner">
+          <div class="hero-copy">
+            <h1 id="heroTitle" class="hero-title">
+              Golden Metro Foundation Indonesia
+            </h1>
+            <p class="hero-sub">
+              Satu Yayasan. Satu Misi. Pendidikan berkelanjutan dari
+              <b>sekolah</b> hingga <b>universitas</b>.
             </p>
-          </div>
-          <div class="program-card">
-            <div class="program-icon"><i class="fas fa-chart-line"></i></div>
-            <h3>Manajemen Bisnis</h3>
-            <p>
-              Mempelajari strategi bisnis digital, manajemen inovatif, dan
-              kewirausahaan.
-            </p>
-          </div>
-          <div class="program-card">
-            <div class="program-icon"><i class="fas fa-palette"></i></div>
-            <h3>Desain Komunikasi Visual</h3>
-            <p>
-              Mengasah kreativitas dalam branding, UI/UX design, dan media
-              digital.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="testimonials" class="testimonials">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Testimoni</span>
-          <h2 class="section-title">Apa Kata Para Alumni Kami?</h2>
-        </div>
-        <div class="testimonials-grid">
-          <div class="testimonial-card">
-            <p class="quote">
-              "Kurikulum di Metro Seven sangat relevan dengan industri. Saya
-              merasa siap kerja bahkan sebelum lulus."
-            </p>
-            <div class="author">
-              <img
-                src="assets/images/Testimoni-MetroSeven.png"
-                alt="Sarah Wijaya"
-              />
-              <div class="author-info">
-                <h4>Ahmad Pratama</h4>
-                <span>Software Engineer, Tech Corp</span>
-              </div>
-            </div>
-          </div>
-          <div class="testimonial-card">
-            <p class="quote">
-              "Lingkungan belajarnya sangat mendukung dan para dosennya adalah
-              praktisi ahli di bidangnya. Pengalaman yang luar biasa!"
-            </p>
-            <div class="author">
-              <img
-                src="assets/images/Testimoni2-MetroSeven.png"
-                alt="Ahmad Pratama"
-              />
-              <div class="author-info">
-                <h4>Sarah Wijaya</h4>
-                <span>Business Analyst, Finance Plus</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- === CONTACT (REPLACE WHOLE SECTION) === -->
-    <section id="contact" class="contact">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Hubungi Kami</span>
-          <h2 class="section-title">Punya Pertanyaan?</h2>
-          <p class="section-subtitle">
-            Isi formulir di bawah ini dan tim admisi kami akan segera
-            menghubungi Anda.
-          </p>
-        </div>
-
-        <div class="contact-layout">
-          <div class="contact-info">
-            <h3>Informasi Kontak</h3>
-            <p>
-              Kami siap membantu menjawab semua pertanyaan Anda mengenai
-              pendaftaran, program studi, dan kehidupan kampus.
-            </p>
-            <div class="info-item">
-              <i class="fas fa-phone"></i>
-              <div class="info-text">
-                <h4>Telepon</h4>
-                <span>(021) 123-4567</span>
-              </div>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-envelope"></i>
-              <div class="info-text">
-                <h4>Email</h4>
-                <span>info@metroseven.ac.id</span>
-              </div>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-map-marker-alt"></i>
-              <div class="info-text">
-                <h4>Alamat</h4>
-                <span>Jl. Pendidikan No. 123, Jakarta Selatan</span>
-              </div>
+            <div class="hero-ctas" role="group" aria-label="Pilih jalur">
+              <a class="btn btn-primary" href="landing-metroseven.html"
+                >University</a
+              >
+              <a class="btn btn-secondary" href="landing-metroseven.html"
+                >School</a
+              >
             </div>
           </div>
 
-          <div class="contact-form-wrapper">
-            <form
-              id="contactForm"
-              novalidate
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-            >
-              <div class="form-grid">
-                <div class="form-group">
-                  <label for="first_name"
-                    >First name <span style="color: #e11d48">*</span></label
-                  >
-                  <input
-                    id="first_name"
-                    name="data-first"
-                    type="text"
-                    class="form-control"
-                    required
-                    autocomplete="off"
-                    autocapitalize="off"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="last_name">Last name</label>
-                  <input
-                    id="last_name"
-                    name="data-last"
-                    type="text"
-                    class="form-control"
-                    autocomplete="off"
-                    autocapitalize="off"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="email"
-                    >Email <span style="color: #e11d48">*</span></label
-                  >
-                  <input
-                    id="email"
-                    name="data-email"
-                    type="email"
-                    class="form-control"
-                    required
-                    autocomplete="off"
-                    autocapitalize="off"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="phone"
-                    >Phone (Indonesia)
-                    <span style="color: #e11d48">*</span></label
-                  >
-                  <input
-                    id="phone"
-                    name="data-phone"
-                    type="tel"
-                    class="form-control"
-                    placeholder="0812xxxxxxx"
-                    inputmode="numeric"
-                    pattern="[0-9\s.+()-]*"
-                    required
-                    autocomplete="off"
-                  />
-                </div>
-              </div>
-
-              <!-- CAMPUS (RADIO) -->
-              <div class="form-group">
-                <label>Campus <span style="color: #e11d48">*</span></label>
-                <div id="campusRadios" class="radio-list" aria-live="polite">
-                  <label class="radio-item">
-                    <input type="radio" name="campus" value="APL" required />
-                    <span>Metro Seven @APL Tower</span>
-                  </label>
-                  <label class="radio-item">
-                    <input type="radio" name="campus" value="Cikupa" />
-                    <span>Metro Seven @Cikupa</span>
-                  </label>
-                </div>
-                <div
-                  id="campusError"
-                  class="field-error"
-                  style="display: none"
-                ></div>
-              </div>
-
-              <!-- JURUSAN (opsional, masuk Description) -->
-              <div class="form-group">
-                <label for="major_interest"
-                  >Jurusan yang diminati (opsional)</label
-                >
-                <input
-                  id="major_interest"
-                  name="data-major"
-                  type="text"
-                  class="form-control"
-                  placeholder="Contoh: Teknik Informatika"
-                  autocomplete="off"
+          <div class="hero-visual">
+            <div class="strip" aria-label="Highlight kegiatan GMFI">
+              <figure class="strip-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-hero1/720/540"
+                  alt="Suasana kelas kolaboratif di Metro School"
+                  loading="eager"
                 />
-              </div>
-
-              <input
-                type="submit"
-                class="btn btn-primary btn-full"
-                value="Kirim Pesan"
-              />
-              <div
-                id="contactMsg"
-                class="debug-info"
-                style="display: none"
-              ></div>
-            </form>
+                <figcaption>Kolaborasi lintas pelajaran</figcaption>
+              </figure>
+              <figure class="strip-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-hero2/720/540"
+                  alt="Workshop riset terapan di Metro University"
+                  loading="lazy"
+                />
+                <figcaption>Riset terapan</figcaption>
+              </figure>
+              <figure class="strip-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-hero3/720/540"
+                  alt="Kegiatan pengabdian masyarakat"
+                  loading="lazy"
+                />
+                <figcaption>Pengabdian</figcaption>
+              </figure>
+              <figure class="strip-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-hero4/720/540"
+                  alt="Kelas literasi digital"
+                  loading="lazy"
+                />
+                <figcaption>Literasi digital</figcaption>
+              </figure>
+              <figure class="strip-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-hero5/720/540"
+                  alt="Kegiatan seni dan olahraga"
+                  loading="lazy"
+                />
+                <figcaption>Karakter & seni</figcaption>
+              </figure>
+            </div>
+            <p class="strip-caption">
+              Pembelajaran lintas jenjang: fondasi karakter → penguatan
+              kompetensi.
+            </p>
           </div>
         </div>
-      </div>
-    </section>
 
-    <footer class="footer">
-      <div class="container footer-container">
-        <p>&copy; 2025 Metro Seven University. Semua hak dilindungi.</p>
-        <div class="social-links">
-          <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+        <!-- Sticky quick CTA — mobile only -->
+        <div class="quick-cta" role="group" aria-label="Akses cepat">
+          <a class="qbtn" href="landing-metroseven.html">University</a>
+          <a class="qbtn alt" href="landing-metro.html">School</a>
+        </div>
+      </section>
+
+      <!-- UNITS -->
+      <section id="units" class="section units" aria-labelledby="unitsTitle">
+        <div class="container">
+          <div class="section-head">
+            <h2 id="unitsTitle">Pilih Lokasi</h2>
+            <p>Jelajahi lokasi Metro Seven University dan Metro Mini School.</p>
+          </div>
+
+          <div class="units-grid">
+            <a
+              class="unit-card uni"
+              href="landing-metroseven.html"
+              aria-label="Metro Seven University Cikupa"
+            >
+              <figure class="unit-media">
+                <img
+                  src="https://picsum.photos/seed/gmfi-campus-cikupa/1200/800"
+                  alt="Metro Seven University @ Cikupa"
+                  loading="lazy"
+                />
+              </figure>
+              <div class="unit-body">
+                <span class="badge">University</span>
+                <h3>Metro Seven University <small>@ Cikupa</small></h3>
+              </div>
+            </a>
+
+            <a
+              class="unit-card uni"
+              href="landing-metroseven.html"
+              aria-label="Metro Seven University APL Tower 27th floor"
+            >
+              <figure class="unit-media">
+                <img
+                  src="https://picsum.photos/seed/gmfi-campus-apl/1200/800"
+                  alt="Metro Seven University @ APL Tower 27th floor"
+                  loading="lazy"
+                />
+              </figure>
+              <div class="unit-body">
+                <span class="badge">University</span>
+                <h3>Metro Seven University <small>@ APL Tower, 27th</small></h3>
+              </div>
+            </a>
+
+            <a
+              class="unit-card sch"
+              href="landing-metro.html"
+              aria-label="Metro Mini School Serpong"
+            >
+              <figure class="unit-media">
+                <img
+                  src="https://picsum.photos/seed/gmfi-school-serpong/1200/800"
+                  alt="Metro Mini School @ Serpong"
+                  loading="lazy"
+                />
+              </figure>
+              <div class="unit-body">
+                <span class="badge alt">School</span>
+                <h3>Metro Mini School <small>@ Serpong</small></h3>
+              </div>
+            </a>
+
+            <a
+              class="unit-card sch"
+              href="landing-metro.html"
+              aria-label="Metro Mini School Sudirman"
+            >
+              <figure class="unit-media">
+                <img
+                  src="https://picsum.photos/seed/gmfi-school-sudirman/1200/800"
+                  alt="Metro Mini School @ Sudirman"
+                  loading="lazy"
+                />
+              </figure>
+              <div class="unit-body">
+                <span class="badge alt">School</span>
+                <h3>Metro Mini School <small>@ Sudirman</small></h3>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABOUT, TIMELINE, ECOSYSTEM, INITIATIVES (modal), IMPACT — tetap sama -->
+
+      <!-- GALLERY / Kehidupan di GMFI -->
+      <section
+        id="gallery"
+        class="section gallery"
+        aria-labelledby="galleryTitle"
+      >
+        <div class="container">
+          <div class="section-head">
+            <h2 id="galleryTitle">Kehidupan di GMFI</h2>
+            <p>
+              Foto-foto yang menggambarkan aktivitas belajar, riset, seni, dan
+              olahraga.
+            </p>
+          </div>
+
+          <div class="carousel" aria-roledescription="carousel">
+            <button class="car-btn prev" aria-label="Sebelumnya">‹</button>
+            <div class="car-track">
+              <!-- 1 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-1/1280/720"
+                  alt="Kelas sains interaktif"
+                  loading="lazy"
+                />
+                <figcaption>Kelas sains interaktif</figcaption>
+              </figure>
+              <!-- 2 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-2/1280/720"
+                  alt="Studio seni & desain"
+                  loading="lazy"
+                />
+                <figcaption>Studio seni & desain</figcaption>
+              </figure>
+              <!-- 3 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-3/1280/720"
+                  alt="Laboratorium komputer"
+                  loading="lazy"
+                />
+                <figcaption>Laboratorium komputer</figcaption>
+              </figure>
+              <!-- 4 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-4/1280/720"
+                  alt="Lapangan olahraga"
+                  loading="lazy"
+                />
+                <figcaption>Lapangan olahraga</figcaption>
+              </figure>
+              <!-- 5 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-5/1280/720"
+                  alt="Perpustakaan"
+                  loading="lazy"
+                />
+                <figcaption>Perpustakaan</figcaption>
+              </figure>
+              <!-- 6 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-6/1280/720"
+                  alt="Eksperimen kimia"
+                  loading="lazy"
+                />
+                <figcaption>Eksperimen kimia</figcaption>
+              </figure>
+              <!-- 7 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-7/1280/720"
+                  alt="Proyek robotik"
+                  loading="lazy"
+                />
+                <figcaption>Proyek robotik</figcaption>
+              </figure>
+              <!-- 8 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-8/1280/720"
+                  alt="Debat bahasa Inggris"
+                  loading="lazy"
+                />
+                <figcaption>Debat bahasa Inggris</figcaption>
+              </figure>
+              <!-- 9 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-9/1280/720"
+                  alt="Kegiatan pramuka"
+                  loading="lazy"
+                />
+                <figcaption>Kegiatan pramuka</figcaption>
+              </figure>
+              <!-- 10 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-10/1280/720"
+                  alt="Pentas seni"
+                  loading="lazy"
+                />
+                <figcaption>Pentas seni</figcaption>
+              </figure>
+              <!-- 11 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-11/1280/720"
+                  alt="Turnamen e-sport antarkelas"
+                  loading="lazy"
+                />
+                <figcaption>Turnamen e-sport</figcaption>
+              </figure>
+              <!-- 12 -->
+              <figure class="car-item">
+                <img
+                  src="https://picsum.photos/seed/gmfi-gal-12/1280/720"
+                  alt="Kegiatan sosial di masyarakat"
+                  loading="lazy"
+                />
+                <figcaption>Pengabdian masyarakat</figcaption>
+              </figure>
+            </div>
+            <button class="car-btn next" aria-label="Berikutnya">›</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MAP -->
+      <section id="map" class="section map" aria-labelledby="mapTitle">
+        <div class="container">
+          <div class="section-head">
+            <h2 id="mapTitle">Peta & Lokasi</h2>
+            <p>
+              Gambaran lokasi unit. Detail alamat tersedia di halaman
+              masing-masing unit.
+            </p>
+          </div>
+
+          <figure class="map-figure">
+            <img
+              src="https://placehold.co/1280x640/F6E0B3/4E4E4E?text=Map+Placeholder"
+              alt="Peta statis lokasi unit GMFI"
+              loading="lazy"
+            />
+            <figcaption>Lokasi Metro School & Metro University.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section id="faq" class="section faq" aria-labelledby="faqTitle">
+        <div class="container">
+          <div class="section-head">
+            <h2 id="faqTitle">Pertanyaan Umum</h2>
+            <p>
+              Ringkasan informasi. Untuk pendaftaran & kurikulum, kunjungi
+              halaman unit terkait.
+            </p>
+          </div>
+
+          <div class="faq-acc" role="list">
+            <details class="faq-item" role="listitem">
+              <summary>Apa itu Golden Metro Foundation Indonesia?</summary>
+              <p>
+                GMFI adalah yayasan pendidikan yang menaungi Metro School dan
+                Metro University, memastikan kesinambungan mutu dari sekolah
+                hingga perguruan tinggi.
+              </p>
+            </details>
+            <details class="faq-item" role="listitem">
+              <summary>Perbedaan Metro School dan Metro University?</summary>
+              <p>
+                Metro School: fondasi karakter, literasi & numerasi. Metro
+                University: riset terapan, kesiapan industri, dan penguatan
+                kompetensi karier.
+              </p>
+            </details>
+            <details class="faq-item" role="listitem">
+              <summary>Bagaimana proses pendaftaran?</summary>
+              <p>
+                Pendaftaran dilakukan melalui halaman masing-masing unit.
+                Gunakan tombol “University” atau “School” di bagian atas halaman
+                ini.
+              </p>
+            </details>
+            <details class="faq-item" role="listitem">
+              <summary>Apakah ada beasiswa?</summary>
+              <p>
+                Informasi beasiswa tersedia di halaman program unit terkait.
+                GMFI menjalankan skema beasiswa untuk pemerataan akses
+                pendidikan.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="f-brand">
+          <span class="f-title">Golden Metro Foundation Indonesia</span>
+          <p class="f-copy">
+            Menyatukan pendidikan dari sekolah hingga universitas.
+          </p>
+        </div>
+        <div class="f-links">
+          <a href="#about">Tentang</a>
+          <a href="#timeline">Sejarah</a>
+          <a href="#initiatives">Program</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="f-meta">
+          <small>© <span id="y">2025</span> GMFI. All rights reserved.</small>
         </div>
       </div>
     </footer>
 
-    <button id="scrollToTop" class="scroll-to-top">
-      <i class="fas fa-chevron-up"></i>
-    </button>
-
-    <script src="js/animations.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/contact.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/gmfi.js"></script>
   </body>
 </html>
