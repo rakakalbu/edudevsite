@@ -228,7 +228,7 @@
 
     try {
       showLoading("Memverifikasi akun…");
-      const j = await api("/api/auth-login", {
+      const j = await api("/api/auth-login-school", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
