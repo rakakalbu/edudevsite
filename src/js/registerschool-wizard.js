@@ -124,8 +124,8 @@
     const path = (location.pathname || "").replace(/^\/+|\/+$/g, "");
     const parts = path ? path.split("/") : [];
     let newPath = location.pathname;
-    if (parts.length >= 2 && parts[0].toLowerCase() === "register") {
-      newPath = "/register";
+    if (parts.length >= 2 && parts[0].toLowerCase() === "registerschool") {
+      newPath = "/registerschool";
     }
     const qs = url.searchParams.toString();
     history.replaceState(null, "", newPath + (qs ? `?${qs}` : ""));
@@ -320,7 +320,7 @@
       $("#accountIdLabel").textContent = j.accountId;
 
       if (S.opp) {
-        const target = `/register.html?opp=${encodeURIComponent(S.opp)}`;
+        const target = `/registerschool.html?opp=${encodeURIComponent(S.opp)}`;
         if (location.pathname + location.search !== target)
           history.replaceState(null, "", target);
       }
@@ -458,7 +458,7 @@
       const { batchmajorId, batchmajorName, bookingPrice } =
         await resolvePricing(intakeId, majorId);
 
-      await api("/api/register-options", {
+      await api("/api/register-options-school", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -957,7 +957,7 @@
         S.sekolah = mergeDefined(S.sekolah, j.sekolah);
       }
 
-      const target = `/register.html?opp=${encodeURIComponent(oppId)}`;
+      const target = `/registerschool.html?opp=${encodeURIComponent(oppId)}`;
       if (location.pathname + location.search !== target) {
         history.replaceState(null, "", target);
       }
