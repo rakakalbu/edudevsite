@@ -190,7 +190,7 @@
   async function updateStage(stageNum) {
     try {
       if (!S.opp) return;
-      await api("/api/salesforce-query", {
+      await api("/api/salesforce-query-school", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ opportunityId: S.opp, webStage: stageNum }),
@@ -245,7 +245,7 @@
       $("#accountIdLabel").textContent = S.acc;
 
       if (S.opp) {
-        const target = `/register.html?opp=${encodeURIComponent(S.opp)}`;
+        const target = `/registerschool.html?opp=${encodeURIComponent(S.opp)}`;
         if (location.pathname + location.search !== target)
           history.replaceState(null, "", target);
       }
@@ -339,42 +339,42 @@
   // =========================
   // STEP 2 (Preferensi)
   // =========================
-  const ROUTE = "/api/register-options";
+  const ROUTE = "/api/register-options-school";
 
-  async function loadCampuses() {
-    const wrap = $("#campusRadios");
+  async function loadMetroSchool() {
+    const wrap = $("#schoolRadios");
     wrap.innerHTML = '<div class="note">Memuat…</div>';
     try {
-      const j = await api(`${ROUTE}?type=campus`);
+      const j = await api(`${ROUTE}?type=metroschool`);
       const recs = j.records || [];
       if (!recs.length) {
         wrap.innerHTML =
-          '<div class="field-error">Data campus tidak tersedia.</div>';
+          '<div class="field-error">Data sekolah tidak tersedia.</div>';
         return;
       }
       wrap.innerHTML = "";
       recs.forEach((c, i) => {
-        const id = `camp_${c.Id}`;
+        const id = `metroschool_${c.Id}`;
         const label = document.createElement("label");
         label.className = "radio-item";
         label.htmlFor = id;
         label.innerHTML = `
-          <input type="radio" id="${id}" name="campus" value="${c.Id}" ${
+          <input type="radio" id="${id}" name="metroschool" value="${c.Id}" ${
           i === 0 ? "checked" : ""
         }>
           <div><div class="radio-title">${c.Name}</div></div>`;
         wrap.appendChild(label);
       });
     } catch {
-      wrap.innerHTML = '<div class="field-error">Gagal memuat campus.</div>';
+      wrap.innerHTML = '<div class="field-error">Gagal memuat sekolah.</div>';
     }
   }
 
-  async function loadIntakes(campusId) {
+  async function loadIntakes(metroSchoolId) {
     const sel = $("#intakeSelect");
     sel.innerHTML = '<option value="">Memuat…</option>';
     const j = await api(
-      `${ROUTE}?type=intake&campusId=${encodeURIComponent(campusId)}`
+      `${ROUTE}?type=intake&metroSchoolId=${encodeURIComponent(metroSchoolId)}`
     );
     const recs = j.records || [];
     sel.innerHTML = '<option value="">Pilih tahun ajaran</option>';
@@ -383,82 +383,80 @@
     );
   }
 
-  async function loadPrograms(campusId, intakeId) {
-    const sel = $("#programSelect");
+  async function loadMajors(metroSchoolId, intakeId) {
+    const sel = $("#majorSelect");
     sel.innerHTML = '<option value="">Memuat…</option>';
     const params = new URLSearchParams({
-      type: "program",
-      campusId,
+      type: "major",
+      metroSchoolId,
       intakeId,
       date: new Date().toISOString().slice(0, 10),
     }).toString();
     const j = await api(`${ROUTE}?${params}`);
     const recs = j.records || [];
-    sel.innerHTML = '<option value="">Pilih program</option>';
+    sel.innerHTML = '<option value="">Pilih Major</option>';
     recs.forEach((x) => {
-      const id = x.Id || x.StudyProgramId;
-      const name = x.Name || x.StudyProgramName;
+      const id = x.Id || x.majorId;
+      const name = x.Name || x.majorName;
       if (id && name) sel.innerHTML += `<option value="${id}">${name}</option>`;
     });
   }
 
-  async function resolvePricing(intakeId, studyProgramId) {
+  async function resolvePricing(intakeId, majorId) {
     const today = new Date().toISOString().slice(0, 10);
     const q = await api(
       `${ROUTE}?type=pricing&intakeId=${encodeURIComponent(
         intakeId
-      )}&studyProgramId=${encodeURIComponent(studyProgramId)}&date=${today}`
+      )}&majorId=${encodeURIComponent(majorId)}&date=${today}`
     );
-    if (!q || !q.bspId) throw new Error("Batch Study Program belum tersedia.");
+    if (!q || !q.batchmajorId) throw new Error("Batch major belum tersedia.");
     return {
-      bspId: q.bspId,
-      bspName: q.bspName,
+      batchmajorId: q.batchmajorId,
+      batchmajorName: q.batchmajorName,
       bookingPrice: q.bookingPrice ?? null,
     };
   }
 
   async function loadStep2Options() {
-    await loadCampuses();
-    const campusId = $('input[name="campus"]:checked')?.value;
-    if (campusId) {
-      await loadIntakes(campusId);
+    await loadMetroSchool();
+    const metroSchoolId = $('input[name="metroschool"]:checked')?.value;
+    if (metroSchoolId) {
+      await loadIntakes(metroSchoolId);
       const intakeId = $("#intakeSelect").value || "";
-      if (intakeId) await loadPrograms(campusId, intakeId);
+      if (intakeId) await loadMajors(metroSchoolId, intakeId);
     }
   }
 
-  $("#campusRadios")?.addEventListener("change", async (e) => {
-    if (e.target?.name === "campus") await loadIntakes(e.target.value);
+  $("#schoolRadios")?.addEventListener("change", async (e) => {
+    if (e.target?.name === "metroschool") await loadIntakes(e.target.value);
   });
 
   $("#intakeSelect")?.addEventListener("change", async () => {
-    const campusId = $('input[name="campus"]:checked')?.value || "";
+    const metroSchoolId = $('input[name="metroschool"]:checked')?.value || "";
     const intakeId = $("#intakeSelect").value || "";
-    if (campusId && intakeId) await loadPrograms(campusId, intakeId);
+    if (metroSchoolId && intakeId) await loadMajors(metroSchoolId, intakeId);
   });
 
   $("#btnBack2").addEventListener("click", () => setStep(1));
 
   $("#formStep2_Prefs").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const campusId = $('input[name="campus"]:checked')?.value || "";
+    const metroSchoolId = $('input[name="metroschool"]:checked')?.value || "";
     const intakeId = $("#intakeSelect").value;
-    const programId = $("#programSelect").value;
-    const programName =
-      $("#programSelect")?.selectedOptions?.[0]?.textContent?.trim() || "";
+    const majorId = $("#majorSelect").value;
+    const majorName =
+      $("#majorSelect")?.selectedOptions?.[0]?.textContent?.trim() || "";
     const msg = $("#msgStep2");
     msg.style.display = "none";
-    if (!campusId || !intakeId || !programId) {
-      msg.textContent = "Pilih campus, tahun ajaran, dan program.";
+    if (!metroSchoolId || !intakeId || !majorId) {
+      msg.textContent = "Pilih sekolah, tahun ajaran, dan major.";
       msg.style.display = "block";
       return;
     }
     try {
-      showLoading("Menyimpan pilihan program…");
-      const { bspId, bspName, bookingPrice } = await resolvePricing(
-        intakeId,
-        programId
-      );
+      showLoading("Menyimpan pilihan major...");
+      const { batchmajorId, batchmajorName, bookingPrice } =
+        await resolvePricing(intakeId, majorId);
 
       await api("/api/register-options", {
         method: "POST",
@@ -466,21 +464,21 @@
         body: JSON.stringify({
           action: "saveReg",
           opportunityId: S.opp,
-          campusId,
+          metroSchoolId,
           intakeId,
-          studyProgramId: programId,
-          bspId,
+          majorId: majorId,
+          batchmajorId,
         }),
       });
 
       S.reg = {
-        campusId,
+        metroSchoolId,
         intakeId,
-        programId,
-        bspId,
-        bspName,
+        majorId,
+        batchmajorId,
+        batchmajorName,
         bookingPrice,
-        studyProgramName: programName,
+        majorName: majorName,
       };
       $("#vaPrice") && ($("#vaPrice").textContent = rupiah(bookingPrice));
       closeLoading();
@@ -848,8 +846,8 @@
       </div>
       <div class="review-section">
         <h4>Preferensi Studi</h4>
-        <div><b>Study Program:</b> ${r?.studyProgramName || "-"}</div>
-        <div><b>BSP:</b> ${r?.bspName || "-"}</div>
+        <div><b>Major:</b> ${r?.majorName || "-"}</div>
+        <div><b>Batch Major:</b> ${r?.batchmajorName || "-"}</div>
         <div><b>Harga Form:</b> ${
           r?.bookingPrice != null
             ? "Rp " + Number(r.bookingPrice).toLocaleString("id-ID")
