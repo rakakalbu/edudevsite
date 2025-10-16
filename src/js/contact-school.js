@@ -66,7 +66,7 @@
     const consent = $('#consent')?.checked;
     const metroSchoolSelect = $('#metroSchoolSelect');
     const metroSchoolId = metroSchoolSelect?.value || null;
-    const metroSchoolName = metroSchoolSelect?.options[metroSchoolSelect.selectedIndex]?.text || '';
+    const metroSchoolName = metroSchoolSelect?.dataset.name || '';
 
     const phone = normalizePhone(rawPhone);
     const msg = $('#formMsg');
@@ -99,47 +99,67 @@
     if(!confirm.isConfirmed) return;
 
     try{
-      showLoading();
-      await api('/api/webtolead_school', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      Swal.close();
-      Swal.fire({
-        icon:'success',
-        title:'Terima kasih!',
-        text:'Data Anda telah dikirim. Kami akan segera menghubungi Anda.',
-      }).then(()=>location.href='thankyou.html');
-    }catch(e2){
-      Swal.close();
-      showError(e2.message);
-      msg.textContent = e2.message || 'Gagal mengirim.';
-      msg.style.color = '#e11d48';
+        showLoading();
+        await api('/api/webtolead_school', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        Swal.close();
+        Swal.fire({
+            icon:'success',
+            title:'Terima kasih!',
+            text:'Data Anda telah dikirim. Kami akan segera menghubungi Anda.',
+        }).then(()=>location.href='thankyou.html');
+        }catch(e2){
+        Swal.close();
+        showError(e2.message);
+        msg.textContent = e2.message || 'Gagal mengirim.';
+        msg.style.color = '#e11d48';
+        }
     }
-  }
 
-  // ⬇️ Load the school list dynamically from Salesforce
-  async function loadMetroSchools() {
-    const select = $('#metroSchoolSelect');
-    if (!select) return;
+ // ⬇️ Load the school list dynamically from Salesforce
+    async function loadMetroSchools() {
+    const list = document.querySelector('#metroSchoolList');
+    const hiddenInput = document.querySelector('#metroSchoolSelect');
+    if (!list) return;
+
+    list.innerHTML = '<p>Loading data sekolah...</p>';
 
     try {
-      const res = await fetch('/api/register-options-school?type=metroschool');
-      const json = await res.json();
+        const res = await fetch('/api/register-options-school?type=metroschool');
+        const json = await res.json();
 
-      if (json?.success && json.records?.length) {
-        select.innerHTML =
-          '<option value="">Pilih Sekolah</option>' +
-          json.records.map(s => `<option value="${s.Id}">${s.Name}</option>`).join('');
-      } else {
-        select.innerHTML = '<option value="">Tidak ada data sekolah</option>';
-      }
+        if (json?.success && json.records?.length) {
+        list.innerHTML = '';
+        json.records.forEach((school) => {
+            const div = document.createElement('div');
+            div.className = 'metro-school-card';
+            div.dataset.id = school.Id;
+            div.dataset.name = school.Name;
+            div.innerHTML = `
+            <img src="https://picsum.photos/200?random=${encodeURIComponent(school.Id)}" alt="${school.Name}">
+            <div class="metro-school-card-name">${school.Name}</div>
+            `;
+            div.addEventListener('click', () => {
+            // remove previous selection
+            list.querySelectorAll('.metro-school-card').forEach(c => c.classList.remove('selected'));
+            // mark selected
+            div.classList.add('selected');
+            hiddenInput.value = school.Id;
+            hiddenInput.dataset.name = school.Name;
+            });
+            list.appendChild(div);
+        });
+        } else {
+        list.innerHTML = '<p>Tidak ada data sekolah</p>';
+        }
     } catch (err) {
-      console.error('Gagal memuat daftar sekolah:', err);
-      select.innerHTML = '<option value="">Gagal memuat data</option>';
+        console.error('Gagal memuat daftar sekolah:', err);
+        list.innerHTML = '<p>Gagal memuat data sekolah</p>';
+        }
     }
-  }
 
   document.addEventListener('DOMContentLoaded', ()=>{
     const form = $('#contactLite');
