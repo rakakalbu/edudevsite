@@ -88,7 +88,7 @@
       phone,
       educationLevel,
       description,
-      masterSchoolId: 'YOUR_DEFAULT_SCHOOL_ID_HERE' // optional static mapping
+      masterSchoolId: 'a0NgL000025W5LhUAK' // optional static mapping
     };
 
     const confirm = await confirmPreview(payload);
