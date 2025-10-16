@@ -125,7 +125,7 @@
     if (!select) return;
 
     try {
-      const res = await fetch('/api/register-options?type=metroschool');
+      const res = await fetch('/api/register-options-school?type=metroschool');
       const json = await res.json();
 
       if (json?.success && json.records?.length) {
