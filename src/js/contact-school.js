@@ -1,4 +1,3 @@
-// public/js/contact-school.js
 (function () {
   const $ = (s, r=document) => r.querySelector(s);
   const emailOk = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||'').toLowerCase());
@@ -43,6 +42,7 @@
         <div><strong>Email:</strong> ${data.email}</div>
         <div><strong>Phone:</strong> ${data.phone}</div>
         <div><strong>Jenjang:</strong> ${data.educationLevel}</div>
+        <div><strong>Sekolah Metro:</strong> ${data.metroSchoolName || '-'}</div>
         <div><strong>Minat khusus:</strong> ${data.description || '-'}</div>
       </div>`;
     return Swal.fire({
@@ -64,6 +64,9 @@
     const educationLevel = document.querySelector('input[name="campus"]:checked')?.value;
     const description = $('#major')?.value.trim() || '';
     const consent = $('#consent')?.checked;
+    const metroSchoolSelect = $('#metroSchoolSelect');
+    const metroSchoolId = metroSchoolSelect?.value || null;
+    const metroSchoolName = metroSchoolSelect?.options[metroSchoolSelect.selectedIndex]?.text || '';
 
     const phone = normalizePhone(rawPhone);
     const msg = $('#formMsg');
@@ -88,7 +91,8 @@
       phone,
       educationLevel,
       description,
-      masterSchoolId: 'a0NgL000025W5LhUAK' // optional static mapping
+      metroSchoolId,   // dynamic value instead of static
+      metroSchoolName, // for confirmation modal
     };
 
     const confirm = await confirmPreview(payload);
@@ -115,8 +119,33 @@
     }
   }
 
+  // ⬇️ Load the school list dynamically from Salesforce
+  async function loadMetroSchools() {
+    const select = $('#metroSchoolSelect');
+    if (!select) return;
+
+    try {
+      const res = await fetch('/api/register-options?type=metroschool');
+      const json = await res.json();
+
+      if (json?.success && json.records?.length) {
+        select.innerHTML =
+          '<option value="">Pilih Sekolah</option>' +
+          json.records.map(s => `<option value="${s.Id}">${s.Name}</option>`).join('');
+      } else {
+        select.innerHTML = '<option value="">Tidak ada data sekolah</option>';
+      }
+    } catch (err) {
+      console.error('Gagal memuat daftar sekolah:', err);
+      select.innerHTML = '<option value="">Gagal memuat data</option>';
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', ()=>{
     const form = $('#contactLite');
     form?.addEventListener('submit', submitForm);
+
+    // 🔹 Load school options once the page loads
+    loadMetroSchools();
   });
 })();
