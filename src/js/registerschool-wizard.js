@@ -394,7 +394,7 @@
     }).toString();
     const j = await api(`${ROUTE}?${params}`);
     const recs = j.records || [];
-    sel.innerHTML = '<option value="">Pilih Major</option>';
+    sel.innerHTML = '<option value="">Pilih Tingkat</option>';
     recs.forEach((x) => {
       const id = x.Id || x.majorId;
       const name = x.Name || x.majorName;
@@ -846,8 +846,8 @@
       </div>
       <div class="review-section">
         <h4>Preferensi Studi</h4>
-        <div><b>Major:</b> ${r?.majorName || "-"}</div>
-        <div><b>Batch Major:</b> ${r?.batchmajorName || "-"}</div>
+        <div><b>Grade:</b> ${r?.majorName || "-"}</div>
+        <div><b>Batch Grade:</b> ${r?.batchmajorName || "-"}</div>
         <div><b>Harga Form:</b> ${
           r?.bookingPrice != null
             ? "Rp " + Number(r.bookingPrice).toLocaleString("id-ID")
